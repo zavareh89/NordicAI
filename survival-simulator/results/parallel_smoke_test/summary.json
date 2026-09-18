@@ -1,0 +1,111 @@
+{
+  "aggregate": {
+    "final_population": {
+      "max": 0.0,
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p10": 0.0
+    },
+    "maximum_population": {
+      "max": 6.0,
+      "mean": 5.5,
+      "median": 5.5,
+      "min": 5.0,
+      "p10": 5.0
+    },
+    "predator_deaths": {
+      "max": 0.0,
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "p10": 0.0
+    },
+    "reproduction_count": {
+      "max": 2.0,
+      "mean": 1.0,
+      "median": 1.0,
+      "min": 0.0,
+      "p10": 0.0
+    },
+    "runtime_seconds": {
+      "max": 3.5774272530002236,
+      "mean": 3.090192343999888,
+      "median": 3.090192343999888,
+      "min": 2.602957434999553,
+      "p10": 2.602957434999553
+    },
+    "score": {
+      "max": 81.10359999999966,
+      "mean": 69.42040000000011,
+      "median": 69.42040000000011,
+      "min": 57.737200000000556,
+      "p10": 57.737200000000556
+    },
+    "starvation_deaths": {
+      "max": 7.0,
+      "mean": 6.0,
+      "median": 6.0,
+      "min": 5.0,
+      "p10": 5.0
+    },
+    "survival_time": {
+      "max": 80.09999999999972,
+      "mean": 68.85000000000014,
+      "median": 68.85000000000014,
+      "min": 57.60000000000055,
+      "p10": 57.60000000000055
+    },
+    "total_herbivore_deaths": {
+      "max": 7.0,
+      "mean": 6.0,
+      "median": 6.0,
+      "min": 5.0,
+      "p10": 5.0
+    }
+  },
+  "base_seed": 1,
+  "controller_config_hash": "114d7d3708ea7dd7",
+  "failed_runs": 0,
+  "n_cores": 2,
+  "n_runs": 2,
+  "runs": [
+    {
+      "error": null,
+      "final_population": 0,
+      "maximum_population": 6,
+      "predator_deaths": 0,
+      "reached_3000_seconds": false,
+      "reproduction_count": 2,
+      "runtime_seconds": 3.5774272530002236,
+      "score": 81.10359999999966,
+      "seed": 1,
+      "starvation_deaths": 7,
+      "status": "success",
+      "survival_time": 80.09999999999972,
+      "total_herbivore_deaths": 7
+    },
+    {
+      "error": null,
+      "final_population": 0,
+      "maximum_population": 5,
+      "predator_deaths": 0,
+      "reached_3000_seconds": false,
+      "reproduction_count": 0,
+      "runtime_seconds": 2.602957434999553,
+      "score": 57.737200000000556,
+      "seed": 2,
+      "starvation_deaths": 5,
+      "status": "success",
+      "survival_time": 57.60000000000055,
+      "total_herbivore_deaths": 5
+    }
+  ],
+  "seeds": [
+    1,
+    2
+  ],
+  "status": "success",
+  "successful_runs": 2,
+  "wall_runtime_seconds": 4.486334154999895
+}

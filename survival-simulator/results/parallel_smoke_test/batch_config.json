@@ -1,0 +1,14 @@
+{
+  "base_seed": 1,
+  "controller_config_hash": "114d7d3708ea7dd7",
+  "multiprocessing_start_method": "spawn",
+  "n_cores": 2,
+  "n_runs": 2,
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "seeds": [
+    1,
+    2
+  ],
+  "timestamp_utc": "2026-09-18T12:52:43.793517+00:00"
+}

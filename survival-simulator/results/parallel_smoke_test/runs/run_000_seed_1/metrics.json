@@ -1,0 +1,15 @@
+{
+  "error": null,
+  "final_population": 0,
+  "maximum_population": 6,
+  "predator_deaths": 0,
+  "reached_3000_seconds": false,
+  "reproduction_count": 2,
+  "runtime_seconds": 3.5774272530002236,
+  "score": 81.10359999999966,
+  "seed": 1,
+  "starvation_deaths": 7,
+  "status": "success",
+  "survival_time": 80.09999999999972,
+  "total_herbivore_deaths": 7
+}
