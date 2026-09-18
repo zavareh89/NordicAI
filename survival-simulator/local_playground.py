@@ -3,7 +3,7 @@ import random
 from src.core import SimulationCore
 from src.utils.controllers.dummy_agent_policy import action_decision
 
-def local_simulation(verbose=True):
+def local_simulation(verbose=False):
     seed = None
     if seed is None: # If no seed is provided, generate a random one
         seed = random.randint(0, 2**32 - 1)
@@ -53,6 +53,8 @@ def local_simulation(verbose=True):
             print(f"Game over! Final Score: {state['score']}")
             print(f"Seed: {seed}")
             running = False
+            print(f'Score: {state["score"]:.2f} | Agents alive: {state["num_agents"]:.0f} | Time: {sim.env.time:.2f}')
+    
 
     pygame.quit()
 
