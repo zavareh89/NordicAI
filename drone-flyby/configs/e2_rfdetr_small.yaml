@@ -87,9 +87,9 @@ augmentation:
   gaussian_noise_std_range: [0.005, 0.015]
 
 inference:
-  confidence_threshold: 0.08
+  confidence_threshold: 0.12
   class_thresholds: {}
-  max_detections: 200
+  max_detections: 20
   nms_iou_threshold: 0.60
   apply_extra_nms: false
   device: cuda

@@ -1,0 +1,258 @@
+{
+  "request_metadata": {
+    "sequence_id": "diagnostic-c220fb9eaeea",
+    "frame": 13,
+    "frame_index": 13,
+    "request_id": "diagnostic-c220fb9eaeea:13:0:1920:1080",
+    "frame_interval_ms": 333,
+    "response_timeout_ms": 3333,
+    "original_width": 3840,
+    "original_height": 2160,
+    "view": {
+      "resolution_level": 0,
+      "center_x": 1920,
+      "center_y": 1080,
+      "view_id": "diagnostic-c220fb9eaeea:13:0:1920:1080",
+      "image_media_type": "image/png",
+      "width": 960,
+      "height": 540,
+      "source_region_xyxy": [
+        0,
+        0,
+        3840,
+        2160
+      ]
+    },
+    "camera_constraints": {
+      "maximum_center_delta": 2203.0,
+      "allowed_resolution_levels": [
+        0,
+        1
+      ],
+      "center_bounds": [
+        {
+          "resolution_level": 0,
+          "width": 3840,
+          "height": 2160,
+          "minimum_center_x": 1920,
+          "maximum_center_x": 1920,
+          "minimum_center_y": 1080,
+          "maximum_center_y": 1080
+        },
+        {
+          "resolution_level": 1,
+          "width": 1920,
+          "height": 1080,
+          "minimum_center_x": 960,
+          "maximum_center_x": 2880,
+          "minimum_center_y": 540,
+          "maximum_center_y": 1620
+        }
+      ],
+      "full_view_reset_exempt_from_delta": true
+    },
+    "camera_command_feedback": null
+  },
+  "response": {
+    "request_id": "diagnostic-c220fb9eaeea:13:0:1920:1080",
+    "frame": 13,
+    "annotations": [
+      {
+        "object_id": "spacecraft",
+        "bbox": [
+          0.38704280853271483,
+          0.6793538411458333,
+          0.39923744201660155,
+          0.7015073423032407
+        ],
+        "confidence": 0.9507383704185486
+      },
+      {
+        "object_id": "small_launcher",
+        "bbox": [
+          0.46235068639119464,
+          0.45771345915617767,
+          0.46821435292561847,
+          0.47043321397569443
+        ],
+        "confidence": 0.921963632106781
+      },
+      {
+        "object_id": "helicopter",
+        "bbox": [
+          0.5883941014607748,
+          0.8005757649739583,
+          0.6207015991210938,
+          0.8462102819372106
+        ],
+        "confidence": 0.9141055941581726
+      },
+      {
+        "object_id": "jet_plane",
+        "bbox": [
+          0.5781681696573894,
+          0.23079097889087818,
+          0.5993157704671224,
+          0.2676164980287905
+        ],
+        "confidence": 0.8781238198280334
+      },
+      {
+        "object_id": "small_tower",
+        "bbox": [
+          0.6979822794596354,
+          0.7721092506691262,
+          0.713807487487793,
+          0.800256856282552
+        ],
+        "confidence": 0.8600475788116455
+      },
+      {
+        "object_id": "tank",
+        "bbox": [
+          0.20637118021647136,
+          0.32096763893410013,
+          0.2195201873779297,
+          0.343695718270761
+        ],
+        "confidence": 0.8593477606773376
+      },
+      {
+        "object_id": "large_launcher",
+        "bbox": [
+          0.935483741760254,
+          0.5352468419958044,
+          0.9760440190633138,
+          0.5897755375614873
+        ],
+        "confidence": 0.8531006574630737
+      },
+      {
+        "object_id": "large_tower",
+        "bbox": [
+          0.9020934422810872,
+          0.16232181125217013,
+          0.9181383132934571,
+          0.19014629787868922
+        ],
+        "confidence": 0.8149788975715637
+      },
+      {
+        "object_id": "ta-ta",
+        "bbox": [
+          0.2664083480834961,
+          0.4958631727430556,
+          0.27471192677815753,
+          0.5034048574942129
+        ],
+        "confidence": 0.7968159317970276
+      },
+      {
+        "object_id": "large_tower",
+        "bbox": [
+          0.9115386327107747,
+          0.0001452472060918808,
+          0.9275736490885417,
+          0.016559537251790366
+        ],
+        "confidence": 0.2927567958831787
+      },
+      {
+        "object_id": "medium_launcher",
+        "bbox": [
+          0.9935787200927735,
+          0.17819049976490162,
+          0.9991813023885091,
+          0.19752946076569733
+        ],
+        "confidence": 0.21123220026493073
+      },
+      {
+        "object_id": "hangar",
+        "bbox": [
+          0.20637118021647136,
+          0.32096763893410013,
+          0.2195201873779297,
+          0.343695718270761
+        ],
+        "confidence": 0.19485421478748322
+      },
+      {
+        "object_id": "small_launcher",
+        "bbox": [
+          0.45284636815388996,
+          0.46257796110930266,
+          0.4585474332173665,
+          0.47421564172815395
+        ],
+        "confidence": 0.19025541841983795
+      },
+      {
+        "object_id": "large_tower",
+        "bbox": [
+          0.9171338399251302,
+          0.0001853443682193756,
+          0.9339900970458984,
+          0.012421248577259205
+        ],
+        "confidence": 0.18853560090065002
+      },
+      {
+        "object_id": "helicopter",
+        "bbox": [
+          0.9115386327107747,
+          0.0001452472060918808,
+          0.9275736490885417,
+          0.016559537251790366
+        ],
+        "confidence": 0.14120382070541382
+      },
+      {
+        "object_id": "medium_launcher",
+        "bbox": [
+          0.9115386327107747,
+          0.0001452472060918808,
+          0.9275736490885417,
+          0.016559537251790366
+        ],
+        "confidence": 0.14087294042110443
+      },
+      {
+        "object_id": "helicopter",
+        "bbox": [
+          0.935483741760254,
+          0.5352468419958044,
+          0.9760440190633138,
+          0.5897755375614873
+        ],
+        "confidence": 0.12144963443279266
+      },
+      {
+        "object_id": "large_tower",
+        "bbox": [
+          0.8892754236857097,
+          0.16878537778501157,
+          0.9019971211751302,
+          0.190513511940285
+        ],
+        "confidence": 0.12049934267997742
+      }
+    ],
+    "requested_view": null
+  },
+  "raw_text_if_unparsed": null,
+  "event": {
+    "frame": 13,
+    "frame_index": 13,
+    "request_id": "diagnostic-c220fb9eaeea:13:0:1920:1080",
+    "status": "ok",
+    "http_status": 200,
+    "http_round_trip_ms": 137.6522020000266,
+    "over_333ms": false,
+    "over_3333ms": false,
+    "gt_count": 9,
+    "prediction_count": 18,
+    "camera_command_ignored": false,
+    "error": null
+  }
+}

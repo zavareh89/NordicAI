@@ -270,15 +270,35 @@ class RFDETRSmallDetector(BaseDetector):
         class_ids = np.asarray(detections.class_id).astype(int)
 
         output: list[Detection] = []
-        for box, confidence, class_id in zip(boxes, confidences, class_ids):
-            # RF-DETR 1.5.2 custom/Roboflow COCO datasets remap category IDs to
-            # contiguous zero-based labels before training.
-            if not 0 <= int(class_id) < len(self.class_names):
-                raise ValueError(
-                    f"RF-DETR 1.5.2 returned out-of-range class id {class_id}; "
-                    f"expected 0..{len(self.class_names)-1}"
-                )
+        num_classes = len(self.class_names)
+
+        for box, confidence, class_id in zip(
+            boxes,
+            confidences,
+            class_ids,
+        ):
             class_id = int(class_id)
+
+            # RF-DETR 1.5.2 can expose one extra background/no-object
+            # output slot for custom Roboflow/COCO datasets.
+            #
+            # For our 16 challenge classes:
+            #   foreground = 0..15
+            #   extra slot = 16
+            #
+            # Never send this extra class to the challenge API.
+            if class_id == num_classes:
+                continue
+
+            # Anything beyond the known RF-DETR background slot is genuinely
+            # unexpected and should remain a hard error.
+            if class_id < 0 or class_id > num_classes:
+                raise ValueError(
+                    f"RF-DETR returned unexpected class id {class_id}; "
+                    f"expected foreground 0..{num_classes - 1} "
+                    f"or background {num_classes}"
+                )
+
             output.append(
                 Detection(
                     class_id=class_id,

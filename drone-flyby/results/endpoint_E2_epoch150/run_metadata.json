@@ -1,0 +1,2599 @@
+{
+  "started_utc": "2026-09-19T20:40:41.373767+00:00",
+  "run_label": "E2_epoch150",
+  "sequence_id": "diagnostic-c220fb9eaeea",
+  "endpoint": "http://127.0.0.1:9053/predict",
+  "subset": "train",
+  "manifest_sha256": "f9294b9cda7898305887b62063af8bd2a1128d9f5632afaf234951fb834db1b1",
+  "split_sha256": "827724ffccb99a70c1a62bb4a71caefeec5bc1ae8f2a13e2d6603a2fe2d64ea9",
+  "protocol_file": "/data/nordicai/drone-flyby/dtos.py",
+  "protocol_sha256": "57c328e9f892ea5d2ea09ed52b464bd9edbd0c9525797e4e21c446db09885f8f",
+  "frames": [
+    {
+      "frame": 0,
+      "frame_index": 0,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000000.png",
+      "png_sha256": "5bb0f37d13475bbd6643648eb26845323aeb6c3f7b289cf4d56e0f72b7ef0903",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1496.0,
+            1247.0,
+            1528.0,
+            1290.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3455.0,
+            359.0,
+            3594.0,
+            464.0
+          ]
+        },
+        {
+          "object_id": "mine_roller",
+          "bbox": [
+            1979.0,
+            2010.0,
+            2032.0,
+            2070.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1525.0,
+            627.0,
+            1566.0,
+            675.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2657.0,
+            1369.0,
+            2823.0,
+            1531.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2028.0,
+            1502.0,
+            2069.0,
+            1550.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1788.0,
+            221.0,
+            1808.0,
+            251.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            888.0,
+            0.0,
+            934.0,
+            13.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2233.0,
+            850.0,
+            2342.0,
+            937.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2616.0,
+            791.0,
+            2669.0,
+            851.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1098.0,
+            293.0,
+            1127.0,
+            312.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 1,
+      "frame_index": 1,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000001.png",
+      "png_sha256": "96575269dd07f999b2972789ed63f740b334f1cc1af299e213244dbde853152b",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1493.0,
+            1314.0,
+            1525.0,
+            1358.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3465.0,
+            416.0,
+            3605.0,
+            521.0
+          ]
+        },
+        {
+          "object_id": "mine_roller",
+          "bbox": [
+            1980.0,
+            2090.0,
+            2033.0,
+            2150.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1522.0,
+            686.0,
+            1563.0,
+            735.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2662.0,
+            1439.0,
+            2830.0,
+            1603.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2029.0,
+            1573.0,
+            2070.0,
+            1622.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1787.0,
+            275.0,
+            1807.0,
+            305.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            882.0,
+            21.0,
+            928.0,
+            64.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2235.0,
+            912.0,
+            2345.0,
+            1000.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2620.0,
+            853.0,
+            2674.0,
+            913.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1093.0,
+            348.0,
+            1122.0,
+            367.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 2,
+      "frame_index": 2,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000002.png",
+      "png_sha256": "ff35033f59d63d1b8d21a4810e9ad3e9c996315457abe8eb8eee5cfd6867f8d0",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1490.0,
+            1383.0,
+            1522.0,
+            1426.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3475.0,
+            473.0,
+            3617.0,
+            579.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1519.0,
+            746.0,
+            1561.0,
+            795.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2668.0,
+            1510.0,
+            2837.0,
+            1676.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2030.0,
+            1646.0,
+            2071.0,
+            1695.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1786.0,
+            330.0,
+            1807.0,
+            360.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            875.0,
+            73.0,
+            922.0,
+            117.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2238.0,
+            975.0,
+            2348.0,
+            1064.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2625.0,
+            916.0,
+            2679.0,
+            976.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1087.0,
+            404.0,
+            1117.0,
+            422.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 3,
+      "frame_index": 3,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000003.png",
+      "png_sha256": "d874399ac90bff808414b8142d2d336e670c3e401cf1c65feff93225dc51832d",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1487.0,
+            1453.0,
+            1519.0,
+            1496.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3486.0,
+            531.0,
+            3628.0,
+            637.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1516.0,
+            807.0,
+            1558.0,
+            856.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2673.0,
+            1583.0,
+            2844.0,
+            1749.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2030.0,
+            1719.0,
+            2073.0,
+            1769.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2199.0,
+            0.0,
+            2271.0,
+            27.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1785.0,
+            386.0,
+            1806.0,
+            416.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            868.0,
+            126.0,
+            915.0,
+            170.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2240.0,
+            1039.0,
+            2351.0,
+            1129.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2630.0,
+            979.0,
+            2685.0,
+            1039.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1082.0,
+            460.0,
+            1112.0,
+            479.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 4,
+      "frame_index": 4,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000004.png",
+      "png_sha256": "b787ba5af19578f979d1de6eb5a1bbb4327721c91011ae37585f780b3a66efa0",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1484.0,
+            1524.0,
+            1516.0,
+            1567.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3496.0,
+            590.0,
+            3640.0,
+            696.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1514.0,
+            869.0,
+            1556.0,
+            918.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2679.0,
+            1656.0,
+            2851.0,
+            1824.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2031.0,
+            1794.0,
+            2074.0,
+            1844.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2201.0,
+            4.0,
+            2273.0,
+            79.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1784.0,
+            442.0,
+            1805.0,
+            473.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            861.0,
+            180.0,
+            909.0,
+            224.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2242.0,
+            1104.0,
+            2354.0,
+            1195.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2635.0,
+            1044.0,
+            2690.0,
+            1104.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1076.0,
+            517.0,
+            1106.0,
+            536.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 5,
+      "frame_index": 5,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000005.png",
+      "png_sha256": "d62749660b9aebe7b6462d758d35a1c4512e4c8c18bd52be1ffa15079979c8be",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1481.0,
+            1596.0,
+            1513.0,
+            1639.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3507.0,
+            649.0,
+            3652.0,
+            756.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1511.0,
+            932.0,
+            1553.0,
+            981.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2685.0,
+            1730.0,
+            2858.0,
+            1900.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2032.0,
+            1870.0,
+            2075.0,
+            1920.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2202.0,
+            56.0,
+            2275.0,
+            132.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1783.0,
+            500.0,
+            1804.0,
+            530.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            854.0,
+            234.0,
+            902.0,
+            278.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2244.0,
+            1170.0,
+            2357.0,
+            1261.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2640.0,
+            1110.0,
+            2696.0,
+            1169.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1070.0,
+            576.0,
+            1101.0,
+            594.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 6,
+      "frame_index": 6,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000006.png",
+      "png_sha256": "241a251a52df4ca3fb312d5dee161295785ded775fc6c840d4b319524485e45d",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1477.0,
+            1668.0,
+            1510.0,
+            1712.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3518.0,
+            710.0,
+            3664.0,
+            817.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1508.0,
+            995.0,
+            1551.0,
+            1044.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2691.0,
+            1806.0,
+            2866.0,
+            1977.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2033.0,
+            1947.0,
+            2076.0,
+            1998.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2204.0,
+            109.0,
+            2278.0,
+            185.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3395.0,
+            0.0,
+            3451.0,
+            26.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1782.0,
+            558.0,
+            1803.0,
+            588.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            847.0,
+            289.0,
+            895.0,
+            334.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2247.0,
+            1237.0,
+            2360.0,
+            1329.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2646.0,
+            1176.0,
+            2701.0,
+            1236.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1064.0,
+            634.0,
+            1095.0,
+            653.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 7,
+      "frame_index": 7,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000007.png",
+      "png_sha256": "a4626fa49a2c2917c195e804a09bc9dcbc7d24d4b1b818771fb291c8ee1a0c63",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1474.0,
+            1743.0,
+            1507.0,
+            1786.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3529.0,
+            771.0,
+            3676.0,
+            879.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1505.0,
+            1060.0,
+            1548.0,
+            1109.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2697.0,
+            1882.0,
+            2873.0,
+            2056.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2034.0,
+            2025.0,
+            2077.0,
+            2077.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2206.0,
+            162.0,
+            2280.0,
+            239.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3404.0,
+            11.0,
+            3462.0,
+            79.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1781.0,
+            616.0,
+            1803.0,
+            646.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            840.0,
+            345.0,
+            888.0,
+            390.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2249.0,
+            1304.0,
+            2364.0,
+            1398.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2651.0,
+            1244.0,
+            2707.0,
+            1303.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1059.0,
+            694.0,
+            1090.0,
+            712.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 8,
+      "frame_index": 8,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000008.png",
+      "png_sha256": "6d94fb7a2193797e755cad295c2a811191e90d85d6be71cdd8a22a16db80825c",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1470.0,
+            1818.0,
+            1504.0,
+            1862.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3540.0,
+            833.0,
+            3689.0,
+            942.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1502.0,
+            1125.0,
+            1546.0,
+            1174.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2703.0,
+            1960.0,
+            2881.0,
+            2135.0
+          ]
+        },
+        {
+          "object_id": "small_plane",
+          "bbox": [
+            2035.0,
+            2105.0,
+            2079.0,
+            2157.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2208.0,
+            216.0,
+            2282.0,
+            294.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3414.0,
+            65.0,
+            3472.0,
+            133.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1781.0,
+            676.0,
+            1802.0,
+            706.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            833.0,
+            401.0,
+            881.0,
+            447.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2251.0,
+            1373.0,
+            2367.0,
+            1467.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2656.0,
+            1312.0,
+            2713.0,
+            1371.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1053.0,
+            755.0,
+            1084.0,
+            772.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 9,
+      "frame_index": 9,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000009.png",
+      "png_sha256": "6a22eb616e4f1b022a2fad43e7f4b07285ea8f5a062dd1aaa1ab6e88911b2a16",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1467.0,
+            1894.0,
+            1500.0,
+            1938.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3552.0,
+            897.0,
+            3701.0,
+            1005.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1499.0,
+            1192.0,
+            1543.0,
+            1241.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2709.0,
+            2039.0,
+            2888.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2210.0,
+            271.0,
+            2285.0,
+            349.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3424.0,
+            120.0,
+            3483.0,
+            188.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1780.0,
+            736.0,
+            1801.0,
+            766.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            825.0,
+            458.0,
+            874.0,
+            504.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2254.0,
+            1443.0,
+            2370.0,
+            1538.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2662.0,
+            1382.0,
+            2719.0,
+            1441.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1047.0,
+            816.0,
+            1078.0,
+            834.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 10,
+      "frame_index": 10,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000010.png",
+      "png_sha256": "e4e3992326ca8dca3ca1040284d0032c4fb02062dedec33392320eb2f9a5c5bc",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1463.0,
+            1972.0,
+            1497.0,
+            2016.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3563.0,
+            961.0,
+            3714.0,
+            1069.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1496.0,
+            1259.0,
+            1540.0,
+            1308.0
+          ]
+        },
+        {
+          "object_id": "condor",
+          "bbox": [
+            2715.0,
+            2120.0,
+            2896.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2212.0,
+            327.0,
+            2287.0,
+            405.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3434.0,
+            176.0,
+            3493.0,
+            243.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1779.0,
+            798.0,
+            1800.0,
+            828.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            818.0,
+            516.0,
+            867.0,
+            563.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2256.0,
+            1514.0,
+            2374.0,
+            1610.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2667.0,
+            1452.0,
+            2725.0,
+            1511.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1040.0,
+            878.0,
+            1072.0,
+            896.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 11,
+      "frame_index": 11,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000011.png",
+      "png_sha256": "e99d6c405c98f6a4ae06a8a66be7e96ce6f03536dfb791c7e49570b3d61480c0",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1460.0,
+            2051.0,
+            1494.0,
+            2095.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3575.0,
+            1025.0,
+            3727.0,
+            1135.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1493.0,
+            1327.0,
+            1537.0,
+            1377.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2214.0,
+            383.0,
+            2290.0,
+            462.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3444.0,
+            233.0,
+            3504.0,
+            299.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1778.0,
+            860.0,
+            1799.0,
+            890.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            810.0,
+            575.0,
+            860.0,
+            622.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2259.0,
+            1586.0,
+            2377.0,
+            1683.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2673.0,
+            1524.0,
+            2731.0,
+            1582.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1034.0,
+            941.0,
+            1066.0,
+            959.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 12,
+      "frame_index": 12,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000012.png",
+      "png_sha256": "d388b5bcf6c3353cdc8c8ece3d3d51897f4c33049be2ec0d2a89ac3d459bd6f4",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "jammer",
+          "bbox": [
+            1456.0,
+            2131.0,
+            1491.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3587.0,
+            1091.0,
+            3740.0,
+            1201.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1490.0,
+            1397.0,
+            1535.0,
+            1446.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2216.0,
+            440.0,
+            2292.0,
+            520.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3455.0,
+            290.0,
+            3515.0,
+            356.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1777.0,
+            923.0,
+            1799.0,
+            953.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            803.0,
+            635.0,
+            853.0,
+            682.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2261.0,
+            1659.0,
+            2381.0,
+            1756.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2678.0,
+            1597.0,
+            2737.0,
+            1655.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1028.0,
+            1005.0,
+            1060.0,
+            1022.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 13,
+      "frame_index": 13,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000013.png",
+      "png_sha256": "04085487b69d7df971b6acda1debf86947ff4cd221391f16bf25cbe1353ac393",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3599.0,
+            1158.0,
+            3754.0,
+            1268.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1486.0,
+            1467.0,
+            1532.0,
+            1516.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2218.0,
+            498.0,
+            2295.0,
+            578.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3465.0,
+            348.0,
+            3526.0,
+            414.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1776.0,
+            986.0,
+            1798.0,
+            1016.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            795.0,
+            695.0,
+            845.0,
+            742.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2264.0,
+            1733.0,
+            2384.0,
+            1831.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2684.0,
+            1670.0,
+            2743.0,
+            1728.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1022.0,
+            1070.0,
+            1054.0,
+            1087.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 14,
+      "frame_index": 14,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000014.png",
+      "png_sha256": "09a2ae27da54c4abaa46e5823d4bd64da71467ec4245c056384dbd8a92ccf5d0",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3611.0,
+            1226.0,
+            3767.0,
+            1336.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1483.0,
+            1539.0,
+            1529.0,
+            1588.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2220.0,
+            556.0,
+            2297.0,
+            638.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3476.0,
+            407.0,
+            3538.0,
+            472.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3719.0,
+            0.0,
+            3765.0,
+            17.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1775.0,
+            1051.0,
+            1797.0,
+            1081.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            787.0,
+            756.0,
+            838.0,
+            804.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2267.0,
+            1808.0,
+            2388.0,
+            1908.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2690.0,
+            1745.0,
+            2750.0,
+            1803.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1015.0,
+            1136.0,
+            1048.0,
+            1153.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 15,
+      "frame_index": 15,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000015.png",
+      "png_sha256": "589145a18f2f1c1dc3bd62bd5684d76dcd7bf6f1d0584853da40e94a37236d1a",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3623.0,
+            1295.0,
+            3781.0,
+            1406.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1480.0,
+            1611.0,
+            1526.0,
+            1661.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2222.0,
+            616.0,
+            2300.0,
+            698.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3487.0,
+            467.0,
+            3549.0,
+            531.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3730.0,
+            25.0,
+            3777.0,
+            69.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1773.0,
+            1117.0,
+            1796.0,
+            1147.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            779.0,
+            818.0,
+            830.0,
+            867.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2269.0,
+            1884.0,
+            2391.0,
+            1985.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2696.0,
+            1821.0,
+            2756.0,
+            1879.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1008.0,
+            1203.0,
+            1042.0,
+            1219.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 16,
+      "frame_index": 16,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000016.png",
+      "png_sha256": "358ec30e83f25e5bb14234494da56f744f60a155e999746c72f397aa328852ee",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3636.0,
+            1364.0,
+            3795.0,
+            1476.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1476.0,
+            1685.0,
+            1523.0,
+            1734.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2224.0,
+            676.0,
+            2303.0,
+            759.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3498.0,
+            527.0,
+            3561.0,
+            592.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3742.0,
+            78.0,
+            3789.0,
+            123.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1772.0,
+            1184.0,
+            1795.0,
+            1213.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            771.0,
+            881.0,
+            822.0,
+            930.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2272.0,
+            1962.0,
+            2395.0,
+            2064.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2702.0,
+            1899.0,
+            2763.0,
+            1956.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            1002.0,
+            1271.0,
+            1035.0,
+            1287.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 17,
+      "frame_index": 17,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000017.png",
+      "png_sha256": "59ae9d9fb5127e9b285a85a93b7596c60ce2ea1c2a341f028657af63202d1d3b",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3649.0,
+            1435.0,
+            3809.0,
+            1547.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1473.0,
+            1759.0,
+            1520.0,
+            1809.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2226.0,
+            737.0,
+            2305.0,
+            821.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3509.0,
+            589.0,
+            3572.0,
+            652.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3754.0,
+            132.0,
+            3801.0,
+            177.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1771.0,
+            1251.0,
+            1794.0,
+            1281.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            763.0,
+            945.0,
+            815.0,
+            994.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2275.0,
+            2041.0,
+            2399.0,
+            2143.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2708.0,
+            1977.0,
+            2769.0,
+            2034.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            995.0,
+            1339.0,
+            1029.0,
+            1355.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 18,
+      "frame_index": 18,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000018.png",
+      "png_sha256": "44ec245b502818b5f75b107bbb01dff563fbb6ff5ffc87b1b21762dec7ed29bf",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3662.0,
+            1507.0,
+            3823.0,
+            1619.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1470.0,
+            1835.0,
+            1517.0,
+            1885.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2228.0,
+            799.0,
+            2308.0,
+            883.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3520.0,
+            651.0,
+            3584.0,
+            714.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3766.0,
+            187.0,
+            3814.0,
+            232.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1770.0,
+            1320.0,
+            1793.0,
+            1350.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            754.0,
+            1010.0,
+            807.0,
+            1060.0
+          ]
+        },
+        {
+          "object_id": "helicopter",
+          "bbox": [
+            2278.0,
+            2121.0,
+            2403.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2714.0,
+            2057.0,
+            2776.0,
+            2114.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            988.0,
+            1409.0,
+            1022.0,
+            1425.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 19,
+      "frame_index": 19,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000019.png",
+      "png_sha256": "a7951095ca6275d2719653aa02979d06dd0c7d544ae52012c7b1d6bc8906af08",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3675.0,
+            1580.0,
+            3838.0,
+            1693.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1466.0,
+            1912.0,
+            1514.0,
+            1962.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2230.0,
+            862.0,
+            2311.0,
+            947.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3532.0,
+            715.0,
+            3596.0,
+            777.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3779.0,
+            242.0,
+            3827.0,
+            288.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1769.0,
+            1390.0,
+            1792.0,
+            1419.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            746.0,
+            1076.0,
+            799.0,
+            1126.0
+          ]
+        },
+        {
+          "object_id": "small_tower",
+          "bbox": [
+            2720.0,
+            2138.0,
+            2783.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            161.0,
+            0.0,
+            343.0,
+            6.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            981.0,
+            1480.0,
+            1015.0,
+            1495.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 20,
+      "frame_index": 20,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000020.png",
+      "png_sha256": "59c7f79a300d26e50404242906cca3ed438b4e58539aa6b269aa03a895079de1",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3688.0,
+            1654.0,
+            3839.0,
+            1767.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1462.0,
+            1991.0,
+            1511.0,
+            2040.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2233.0,
+            926.0,
+            2314.0,
+            1011.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3543.0,
+            779.0,
+            3609.0,
+            840.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3791.0,
+            298.0,
+            3839.0,
+            344.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1768.0,
+            1460.0,
+            1791.0,
+            1490.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            737.0,
+            1143.0,
+            790.0,
+            1193.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            149.0,
+            0.0,
+            333.0,
+            58.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            974.0,
+            1552.0,
+            1009.0,
+            1567.0
+          ]
+        },
+        {
+          "object_id": "medium_plane",
+          "bbox": [
+            610.0,
+            0.0,
+            665.0,
+            32.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 21,
+      "frame_index": 21,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000021.png",
+      "png_sha256": "d133048e0fe00691a282e4bbbe11895807fdb5d2c26b24e4ed74017b11a3c3fc",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3702.0,
+            1730.0,
+            3839.0,
+            1843.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1459.0,
+            2070.0,
+            1507.0,
+            2120.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2235.0,
+            990.0,
+            2316.0,
+            1077.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3555.0,
+            844.0,
+            3621.0,
+            905.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3804.0,
+            355.0,
+            3839.0,
+            401.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1767.0,
+            1532.0,
+            1790.0,
+            1562.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            729.0,
+            1210.0,
+            782.0,
+            1261.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            138.0,
+            0.0,
+            322.0,
+            110.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            967.0,
+            1625.0,
+            1002.0,
+            1640.0
+          ]
+        },
+        {
+          "object_id": "medium_plane",
+          "bbox": [
+            602.0,
+            37.0,
+            657.0,
+            85.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 22,
+      "frame_index": 22,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000022.png",
+      "png_sha256": "339fe7a047937e6f3ae3dde5dbbc1f08164662269ed4fb8cd9bc78356d661c01",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3715.0,
+            1806.0,
+            3839.0,
+            1920.0
+          ]
+        },
+        {
+          "object_id": "spacecraft",
+          "bbox": [
+            1455.0,
+            2151.0,
+            1504.0,
+            2159.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2237.0,
+            1056.0,
+            2319.0,
+            1143.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3567.0,
+            910.0,
+            3634.0,
+            970.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3817.0,
+            413.0,
+            3839.0,
+            459.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1766.0,
+            1605.0,
+            1789.0,
+            1634.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            720.0,
+            1279.0,
+            774.0,
+            1330.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            126.0,
+            36.0,
+            312.0,
+            164.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            960.0,
+            1699.0,
+            995.0,
+            1713.0
+          ]
+        },
+        {
+          "object_id": "medium_plane",
+          "bbox": [
+            593.0,
+            90.0,
+            649.0,
+            139.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 23,
+      "frame_index": 23,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000023.png",
+      "png_sha256": "1abbe2d93a785502c5b17ab0ffa6144deb49fade8ca9bd32864073f1216bf639",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3729.0,
+            1884.0,
+            3839.0,
+            1998.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2239.0,
+            1123.0,
+            2322.0,
+            1210.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3579.0,
+            978.0,
+            3647.0,
+            1037.0
+          ]
+        },
+        {
+          "object_id": "medium_launcher",
+          "bbox": [
+            3830.0,
+            472.0,
+            3839.0,
+            518.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1765.0,
+            1679.0,
+            1788.0,
+            1708.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            711.0,
+            1349.0,
+            765.0,
+            1400.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            114.0,
+            89.0,
+            302.0,
+            218.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            952.0,
+            1774.0,
+            988.0,
+            1788.0
+          ]
+        },
+        {
+          "object_id": "medium_plane",
+          "bbox": [
+            584.0,
+            144.0,
+            640.0,
+            193.0
+          ]
+        }
+      ]
+    },
+    {
+      "frame": 24,
+      "frame_index": 24,
+      "image_path": "/data/nordicai/drone-flyby/prepared/level0/images/frame_000024.png",
+      "png_sha256": "89f77b390e3586e1b604d1c1e386d3120e419f7a20d0df8fde0330eca16d0db8",
+      "width": 3840,
+      "height": 2160,
+      "annotations": [
+        {
+          "object_id": "large_launcher",
+          "bbox": [
+            3744.0,
+            1963.0,
+            3839.0,
+            2077.0
+          ]
+        },
+        {
+          "object_id": "jet_plane",
+          "bbox": [
+            2242.0,
+            1190.0,
+            2325.0,
+            1279.0
+          ]
+        },
+        {
+          "object_id": "large_tower",
+          "bbox": [
+            3591.0,
+            1046.0,
+            3660.0,
+            1104.0
+          ]
+        },
+        {
+          "object_id": "small_launcher",
+          "bbox": [
+            1763.0,
+            1754.0,
+            1787.0,
+            1783.0
+          ]
+        },
+        {
+          "object_id": "tank",
+          "bbox": [
+            702.0,
+            1420.0,
+            756.0,
+            1472.0
+          ]
+        },
+        {
+          "object_id": "hangar",
+          "bbox": [
+            102.0,
+            143.0,
+            291.0,
+            273.0
+          ]
+        },
+        {
+          "object_id": "ta-ta",
+          "bbox": [
+            945.0,
+            1851.0,
+            981.0,
+            1865.0
+          ]
+        },
+        {
+          "object_id": "medium_plane",
+          "bbox": [
+            575.0,
+            199.0,
+            632.0,
+            248.0
+          ]
+        }
+      ]
+    }
+  ],
+  "client_timeout_seconds": 30,
+  "sequential_no_frame_skipping": true,
+  "server_checkpoint": "Not introspected; identify with --run-label",
+  "metrics_use_all_returned_confidences": true,
+  "operating_threshold": 0.05
+}

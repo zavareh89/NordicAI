@@ -1,0 +1,17 @@
+Endpoint replay: E2_epoch150
+
+training replay diagnostic
+
+Frames: 25; failures: 0; valid empty: 0
+mAP50: 0.9536 (95.36%)
+mAP50-95: 0.7258; mAP75: 0.8578
+Precision / recall / F1 at confidence 0.05: 0.5682 / 0.9807 / 0.7195
+Class-agnostic recall at same threshold: 0.9807
+HTTP latency mean / p95: 122.0 / 127.0 ms
+
+Resubstitution diagnostic, not proof of generalization.
+AP uses all returned scores; the server may already filter/cap detections.
+Failed/invalid responses contribute zero predictions; their ground truth remains.
+HTTP-200 empty responses may hide detector exceptions; inspect server telemetry.
+Sequential replay does not emulate upstream skipping, concurrency or competition realtime scoring.
+A new sequence_id does not guarantee resetting server telemetry; use a separate diagnostic server/log directory.

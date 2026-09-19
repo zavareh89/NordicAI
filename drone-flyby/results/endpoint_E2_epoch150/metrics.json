@@ -1,0 +1,180 @@
+{
+  "evaluation": "training replay diagnostic",
+  "run_label": "E2_epoch150",
+  "frame_count": 25,
+  "ground_truth_count": 259,
+  "prediction_count": 447,
+  "statuses": {
+    "ok": 25
+  },
+  "failed_frames": [],
+  "valid_empty_frames": [],
+  "camera_command_frames": [],
+  "coco": {
+    "map50": 0.9536237909286377,
+    "map75": 0.8578298764141425,
+    "map50_95": 0.7258107666737735,
+    "mar50_95": 0.7590273209342145,
+    "max_detections_per_image_per_class": 100,
+    "per_class": {
+      "hangar": {
+        "ap50": 0.8316831683168316,
+        "ap75": 0.13465346534653466,
+        "ap50_95": 0.44613861386138615,
+        "ar50_95": 0.5
+      },
+      "helicopter": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.822983836845223,
+        "ar50_95": 0.8421052631578947
+      },
+      "jet_plane": {
+        "ap50": 1.0,
+        "ap75": 0.9504950495049505,
+        "ap50_95": 0.7914674109111316,
+        "ar50_95": 0.809090909090909
+      },
+      "large_launcher": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.7961355674028942,
+        "ar50_95": 0.8159999999999998
+      },
+      "large_tower": {
+        "ap50": 0.9405940594059405,
+        "ap75": 0.9405940594059405,
+        "ap50_95": 0.6776371387138714,
+        "ar50_95": 0.7052631578947367
+      },
+      "medium_launcher": {
+        "ap50": 0.5793301231383643,
+        "ap75": 0.050447901933050446,
+        "ap50_95": 0.22530169245916187,
+        "ar50_95": 0.37
+      },
+      "medium_plane": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.8445544554455445,
+        "ar50_95": 0.86
+      },
+      "mine_roller": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.6504950495049505,
+        "ar50_95": 0.65
+      },
+      "small_launcher": {
+        "ap50": 0.9954822148881552,
+        "ap75": 0.8766122989110505,
+        "ap50_95": 0.7068923958161253,
+        "ar50_95": 0.748
+      },
+      "small_plane": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.8806034889203207,
+        "ar50_95": 0.9
+      },
+      "small_tower": {
+        "ap50": 1.0,
+        "ap75": 0.9138613861386137,
+        "ap50_95": 0.8000106837606837,
+        "ar50_95": 0.8150000000000001
+      },
+      "ta-ta": {
+        "ap50": 1.0,
+        "ap75": 0.9477227722772279,
+        "ap50_95": 0.7132640264026403,
+        "ar50_95": 0.756
+      },
+      "tank": {
+        "ap50": 0.9603960396039604,
+        "ap75": 0.9603960396039604,
+        "ap50_95": 0.7846882421546002,
+        "ar50_95": 0.8160000000000001
+      },
+      "condor": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.7993399339933993,
+        "ar50_95": 0.8181818181818181
+      },
+      "jammer": {
+        "ap50": 1.0,
+        "ap75": 1.0,
+        "ap50_95": 0.8392993145468394,
+        "ar50_95": 0.8692307692307694
+      },
+      "spacecraft": {
+        "ap50": 0.9504950495049505,
+        "ap75": 0.9504950495049505,
+        "ap50_95": 0.8341604160416042,
+        "ar50_95": 0.8695652173913044
+      }
+    },
+    "evaluated_classes": [
+      "hangar",
+      "helicopter",
+      "jet_plane",
+      "large_launcher",
+      "large_tower",
+      "medium_launcher",
+      "medium_plane",
+      "mine_roller",
+      "small_launcher",
+      "small_plane",
+      "small_tower",
+      "ta-ta",
+      "tank",
+      "condor",
+      "jammer",
+      "spacecraft"
+    ],
+    "classes_without_ground_truth": []
+  },
+  "operating_point": {
+    "confidence_threshold": 0.05,
+    "iou_threshold": 0.5,
+    "tp": 254,
+    "fp": 193,
+    "fn": 5,
+    "precision": 0.5682326621923938,
+    "recall": 0.9806949806949807,
+    "f1": 0.7195467422096318,
+    "mean_matched_iou": 0.8726313987562174
+  },
+  "class_agnostic_at_operating_point": {
+    "confidence_threshold": 0.05,
+    "iou_threshold": 0.5,
+    "tp": 254,
+    "fp": 193,
+    "fn": 5,
+    "precision": 0.5682326621923938,
+    "recall": 0.9806949806949807,
+    "f1": 0.7195467422096318,
+    "mean_matched_iou": 0.8726313987562174
+  },
+  "map50_timeout_only_3333ms": 0.9536237909286377,
+  "http_latency_ms": {
+    "mean": 121.97452628002793,
+    "p50": 122.16734499997983,
+    "p95": 127.01545900017663,
+    "max": 137.6522020000266
+  },
+  "frames_over_333ms": 0,
+  "frames_over_3333ms": 0,
+  "returned_confidence": {
+    "mean": 0.5608560417422512,
+    "max": 0.9684715270996094
+  },
+  "warnings": [
+    "Resubstitution diagnostic, not proof of generalization.",
+    "AP uses all returned scores; the server may already filter/cap detections.",
+    "Failed/invalid responses contribute zero predictions; their ground truth remains.",
+    "HTTP-200 empty responses may hide detector exceptions; inspect server telemetry.",
+    "Sequential replay does not emulate upstream skipping, concurrency or competition realtime scoring.",
+    "A new sequence_id does not guarantee resetting server telemetry; use a separate diagnostic server/log directory."
+  ]
+}
