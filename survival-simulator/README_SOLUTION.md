@@ -190,107 +190,91 @@ the verified public simulator mechanics. Those compatibility files are deliberat
 For authoritative pre-submission verification, run the evaluator inside a fresh official repository checkout. Parallel
 execution changes only evaluation orchestration; it does not alter the production controller or API behavior.
 
-## Hyperparameter optimization: 100 TPE candidates × 30 seeds
+## Focused architecture-v2 HPO: C167-v2 baseline + 99 TPE candidates
 
-The repository now includes `hpo.py`, a thin optimization layer on top of the existing `run_parallel(...)` evaluator.
-The controller, API, simulator integration, per-agent memory, and evaluation path are unchanged.
+The original 190-trial v1 study is now treated as **historical evidence**, not restarted. C167 was selected on unseen
+seeds, and the architecture-v2 comparison showed a large improvement over C167-v1. The new `hpo.py` therefore performs
+a focused search around **C167-v2** instead of reopening all 28 legacy parameters.
 
-### Why TPE
+This is intentional: with a 100-candidate budget, searching 28 old dimensions plus every new v2 control would make TPE
+spend most of its budget relearning parameter regions that the first study already established.
 
-For this controller, Optuna's Tree-structured Parzen Estimator (TPE) is a better fit than a Gaussian-process Bayesian
-optimizer or a large evolutionary population because the budget is only 100 candidate configurations while the search
-space contains a mixture of continuous and integer parameters. TPE is inexpensive, handles mixed bounded spaces directly,
-and its multivariate mode can learn interactions such as predator distance/weight or reproduction threshold/cooldown.
+### Search schedule and seed hygiene
 
-The schedule is:
-
-```text
-C001 = your existing default configuration (never overwritten by hpo.py)
-C002..C021 = 20 TPE startup/random candidates
-C022..C101 = 80 adaptive TPE candidates
-```
-
-Candidate configurations are evaluated **sequentially at the HPO level** because TPE needs the preceding results to
-choose the next configuration. Inside every candidate, the existing evaluator launches 30 simulations concurrently:
+The focused study uses a fresh common seed set:
 
 ```text
-1 candidate parameter set
-        ↓
-30 fixed simulator seeds
-        ↓
-30 worker processes / cores
-        ↓
-summary.json
-        ↓
-TPE observes the candidate objective and proposes the next candidate
+70000, 70001, ..., 70029
 ```
 
-Therefore 100 HPO candidates correspond to 3,000 simulator episodes, but at most 30 simulator workers are active at once.
-Do not set Optuna itself to run multiple candidates concurrently on the same 30-core machine; the parallelism belongs
-inside each candidate batch.
+These seeds are distinct from the original HPO (`1000..1029`), v1 candidate holdout (`50000..50029`), and v1-v2
+architecture comparison (`60000..60029`). Every focused-HPO candidate is evaluated on the same 30 seeds.
 
-### Fair comparison across candidates
-
-All candidates use the same seeds by default:
+Case numbering continues after the historical C002-C191 study:
 
 ```text
-1000, 1001, ..., 1029
+C192 = exact C167-v2 base configuration, reevaluated on 70000..70029
+C193..C291 = 99 focused TPE candidates
 ```
 
-This common-random-number design substantially reduces noise when comparing two parameter vectors. Otherwise TPE could
-reward a candidate simply because it happened to receive easier simulator seeds.
+C192 is deliberately enqueued before sampling so the new study always contains an apples-to-apples baseline on its own
+training seeds.
 
-The default optimization objective is a mildly downside-aware score:
+The scalar objective remains:
 
 ```text
 objective = 0.8 * mean_score + 0.2 * p10_score
 ```
 
-The mean remains dominant, while the p10 term discourages parameter sets that have a good average but repeatedly collapse
-on a minority of seeds. Every raw run and the full mean/median/min/max/p10 summary are still stored. If you want to optimize
-only expected score, pass `--objective mean`.
+This keeps the optimization criterion consistent with the original model-selection procedure while still penalizing
+catastrophic tail failures.
 
-### Search ranges
+### Parameters searched
 
-The ranges are intentionally local around the hand-engineered C001 defaults. With only 100 samples in a 28-dimensional
-space, very broad intervals would spend most of the budget in implausible regions.
+Only 17 parameters are reopened.
 
-| Parameter | C001 default | HPO range |
-|---|---:|---:|
-| `master_seed` | 20260918 | **fixed** (not optimized) |
-| `emergency_predator_distance` | 45 | 35–60 |
-| `predator_danger_distance` | 150 | 120–190 |
-| `predator_repulsion_weight` | 4.5 | 3.0–7.0 |
-| `predator_prediction_weight` | 0.65 | 0.25–1.00 |
-| `escape_persistence_ticks` | 6 | 4–10 integer |
-| `wall_danger_distance` | 52 | 40–70 |
-| `wall_repulsion_weight` | 3.2 | 2.0–5.0 |
-| `herbivore_repulsion_radius` | 42 | 30–60 |
-| `herbivore_repulsion_weight` | 0.65 | 0.30–1.00 |
-| `max_turn_angle` | 0.35 | 0.25–0.45 |
-| `critical_energy_ratio` | 0.23 | 0.18–0.28 |
-| `low_energy_ratio` | 0.36 | 0.31–0.43 |
-| `fruit_attraction_weight` | 2.4 | 1.70–3.50 |
-| `fruit_distance_penalty` | 0.010 | 0.006–0.016, log sampled |
-| `fruit_competition_penalty` | 1.25 | 0.70–1.80 |
-| `target_persistence_bonus` | 0.70 | 0.40–1.10 |
-| `target_timeout_ticks` | 24 | 16–36 integer |
-| `forage_move_fraction` | 0.86 | 0.75–0.95 |
-| `explore_move_fraction` | 0.58 | 0.45–0.68 |
-| `conserve_move_fraction` | 0.32 | 0.20–0.40 |
-| `evasion_sprint_fraction` | 0.78 | 0.68–0.90 |
-| `exploration_change_interval` | 45 | 30–70 integer |
-| `spawn_min_energy` | 225 | 190–260 |
-| `spawn_old_age` | 55 | 42–70 |
-| `population_soft_cap` | 12 | 9–16 integer |
-| `reproduction_cooldown_ticks` | 90 | 65–130 integer |
-| `stuck_tick_threshold` | 7 | 5–10 integer |
-| `recovery_ticks` | 6 | 4–9 integer |
+| Parameter | C167-v2 base | Focused range | Why it remains tunable |
+|---|---:|---:|---|
+| `emergency_predator_distance` | 39.11 | 33–45 | v2 TTC changes the close-range emergency boundary |
+| `predator_danger_distance` | 187.45 | 175–225 | old HPO pushed upward; it is the base v2 danger radius |
+| `predator_prediction_weight` | 0.960 | 0.80–1.15 | old upper-bound signal + predictive planner use |
+| `escape_persistence_ticks` | 10 | 9–18 | old HPO hit its upper bound; important for tail survival |
+| `evasion_sprint_fraction` | 0.805 | 0.75–0.95 | directly defines nominal v2 evasion speed |
+| `exploration_change_interval` | 68 | 55–100 integer | old upper-bound signal; v2 sector exploration makes persistence directly relevant |
+| `fruit_distance_penalty` | 0.01523 | 0.013–0.022 | strong old directional signal and still used in target selection |
+| `spawn_min_energy` | 201.89 | 180–225 | base of the new dynamic reproduction threshold |
+| `population_soft_cap` | 15 | 14–20 | base of the v2 adaptive carrying capacity |
+| `planner_horizon_steps` | 2 | 1–3 integer | controls candidate projection horizon |
+| `planner_angle_spread` | 0.42 | 0.28–0.60 | controls directional alternatives around the v1 proposal |
+| `planner_predator_weight` | 4.0 | 2.8–6.5 | main final-action safety weight |
+| `planner_food_weight` | 1.7 | 1.1–2.6 | safety/food tradeoff in final action selection |
+| `planner_energy_weight` | 0.55 | 0.30–0.90 | movement/turn-energy tradeoff |
+| `planner_wall_clearance` | 18 | 13–24 | hard predicted wall-clearance threshold |
+| `ttc_danger_ticks` | 22 | 14–34 | predictive danger urgency window |
+| `dynamic_population_bonus` | 6 | 3–10 integer | amount the adaptive carrying capacity may move from the base cap |
 
-`master_seed` is intentionally not optimized. Selecting a lucky controller RNG seed would be optimization of randomness,
-not optimization of behavior, and is unlikely to transfer to hidden evaluation conditions. It remains fixed in every
-candidate. The static intervals also guarantee the existing config constraints: the emergency predator range is always
-below the danger range, and the critical-energy range is always below the low-energy range.
+Everything else is **fixed to the holdout-selected C167-v2 values**. Important examples deliberately fixed include old
+wall-force parameters, `max_turn_angle`, energy thresholds, general foraging/exploration speeds, fruit-attraction and
+persistence terms, herbivore-repulsion terms, reproduction cooldown/old-age logic, stuck recovery, fruit-track matching
+thresholds, and `planner_wall_soft_clearance`.
+
+Those fields are fixed for specific reasons: the first HPO already converged them sufficiently, their v2 role is mostly
+superseded by another mechanism, or they are lower-level implementation tolerances that should not consume a 100-trial
+search budget without evidence that they are limiting performance.
+
+The complete searched/fixed values and a rationale for every searched field are written to `hpo_search_space.json` when
+the study starts.
+
+### Base configuration
+
+The package includes:
+
+```text
+config/C167_v2_hpo_base.json
+```
+
+This is the exact holdout-selected C167 parameter vector with `architecture_v2_enabled=true`. The focused HPO refuses to
+start from a v1 configuration or with the planner disabled.
 
 ### Install HPO dependency
 
@@ -298,73 +282,58 @@ below the danger range, and the critical-energy range is always below the low-en
 python -m pip install -r requirements-hpo.txt
 ```
 
-### Run all 100 candidates
+### Run the 100-case focused search on 30 cores
 
 From the official `survival-simulator/` directory:
 
 ```bash
 python hpo.py \
-  --results-root results \
+  --base-config config/C167_v2_hpo_base.json \
+  --results-root results_v2_hpo \
   --n-trials 100 \
   --n-cores 30 \
-  --base-seed 1000
+  --base-seed 70000
 ```
 
-This leaves `results/C001` untouched and creates exactly:
+The default arguments already match this command, so `python hpo.py` is sufficient if the bundled paths are unchanged.
+
+The output is:
 
 ```text
-results/
-├── C001/                         # existing default, untouched
-├── C002/
-│   ├── params.json
-│   ├── batch_config.json
-│   ├── summary.json
-│   ├── runs.csv
-│   ├── hpo_trial.json
-│   └── runs/
-├── C003/
-│   └── ...
+results_v2_hpo/
+├── C192/                         # exact C167-v2 baseline on new HPO seeds
+├── C193/
 ├── ...
-├── C101/
-│   └── ...
-├── hpo_study.db                 # persistent Optuna study
-├── hpo_config.json              # HPO-level reproducibility settings
-├── hpo_search_space.json        # exact parameter ranges
-├── hpo_trials.csv               # one row per Cxxx candidate
-├── hpo_summary.json             # current progress + best HPO case
-└── best_params.json             # current best HPO parameter vector
+├── C291/
+├── hpo_v2_focused_study.db       # persistent Optuna study
+├── hpo_base_config.json          # exact frozen baseline
+├── hpo_config.json               # seed/objective/study settings
+├── hpo_search_space.json         # searched + fixed parameters and rationale
+├── hpo_trials.csv                # one row per candidate
+├── hpo_summary.json              # progress + current best
+└── best_params.json              # current best complete PolicyConfig
 ```
 
-Each `Cxxx/summary.json` is produced by the unchanged parallel evaluator and therefore contains the full batch statistics
-and per-seed scalar results. `hpo_trials.csv` gives a compact cross-candidate table including objective value, score
-statistics, config hash, and all sampled parameters.
+At the HPO level candidates are still evaluated sequentially. Inside each candidate, `evaluate.run_parallel()` launches
+30 independent simulator episodes concurrently, one per core. Thus 100 cases correspond to 3,000 simulator episodes but
+never to 100 simultaneous Optuna candidates.
 
-### Resume after interruption
+### Resume safety
 
-The Optuna study is persisted in `results/hpo_study.db`. Running the same command again resumes it instead of starting
-another study. If the process was interrupted while one case was RUNNING, `hpo.py` checks that case first: if a complete
-`summary.json` exists it reuses it; otherwise it reruns exactly that saved parameter vector on the same fixed seed batch.
-It then continues with the next `Cxxx` identifier.
+The study remains resumable after interruption. In addition to the existing Optuna SQLite state, focused HPO now refuses
+to resume if the base seed, number of per-candidate seeds/cores, objective, base C167-v2 config, or search-space definition
+has changed. This prevents silently mixing incomparable trials in one study.
 
-Do not delete `hpo_study.db` while keeping partially populated `C002..C101` directories. The database is what keeps
-Optuna trial numbers synchronized with those directory names. For a completely fresh optimization, use a fresh results
-root. `--reset-study` deletes only the SQLite study and intentionally does not silently delete existing candidate results.
+### After focused HPO
 
-### Short functionality test
+Do **not** choose the final competition configuration only from `70000..70029`; those seeds are now optimization data.
+Shortlist the best few C192-C291 candidates and evaluate them on another untouched common seed set, e.g.:
 
-Before committing thousands of simulator episodes, the HPO orchestration can be smoke-tested with a small temporary
-results directory:
-
-```bash
-python hpo.py \
-  --results-root results/hpo_smoke \
-  --n-trials 2 \
-  --n-cores 2 \
-  --base-seed 1
+```text
+80000..80029
 ```
 
-This tests TPE sampling, parameter validation, the nested 2-process evaluator, result persistence, Optuna ask/tell state,
-and global HPO summaries. It is only a functionality test; do not use its scores for parameter selection.
+Use `validate_holdout.py` for that final comparison, exactly as for the earlier C167 selection.
 
 ## Holdout selection of the best original HPO candidate
 
@@ -505,10 +474,6 @@ from fighting food/predator objectives when the wall is not actually constrainin
 
 ### Architecture-v2 configuration and HPO compatibility
 
-The new fields are appended to `PolicyConfig`, so historical Cxxx JSON files still load: omitted fields take conservative
-v2 defaults. The original 28 HPO dimensions are unchanged; architecture-v2 controls are currently fixed rather than
-silently expanding an already large search space.
-
-`hpo.py` now records these fixed fields and refuses to mix v1 and v2 trials in the same results root. An old HPO directory
-whose metadata predates the v2 flag is interpreted as v1. To optimize v2 later, use a **fresh results root**; do not append
-v2 trials to the database that produced C002..C191.
+The new fields are appended to `PolicyConfig`, so historical Cxxx JSON files still load. The original C002-C191 study is
+kept as historical v1 evidence. The current `hpo.py` is a separate, focused architecture-v2 study built around the
+holdout-selected C167 values; it does not append trials to the old study or reopen every legacy parameter.
