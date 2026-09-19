@@ -11,7 +11,9 @@ data:
   target_height: 540
   interpolation: INTER_AREA
   split:
-    strategy: blocked_holdout
+    # Final baseline uses every labeled frame because singleton/rare classes can be
+    # completely lost from training under a blocked holdout.
+    strategy: all_frames
     val_count: 5
     purge_gap: 1
     val_position: end
@@ -23,15 +25,10 @@ model:
   pretrained: true
   pretrained_weights: rf-detr-small.pth
   deployment_weights: weights/challenge/E2_rfdetr_small_best.pth
-  # RF-DETR Small 1.5.2: patch_size=16, num_windows=2. 960 is valid and also
-  # divisible by 64 for square_resize_div_64.
   resolution: 960
 
 training:
   epochs: 150
-  # In RF-DETR 1.5.2 the DataLoader batch is batch_size*grad_accum_steps, then
-  # it is split into grad_accum_steps micro-batches internally. These defaults
-  # therefore give an effective batch of 8 with GPU micro-batches of 2.
   batch_size: 2
   grad_accum_steps: 4
   workers: 4
@@ -48,30 +45,27 @@ training:
   use_ema: true
   ema_decay: 0.993
   ema_tau: 100
-  early_stopping: true
+  # RF-DETR 1.5.2 still requires valid/, so preparation mirrors train -> valid.
+  # These metrics are not independent and therefore must not drive stopping/selection.
+  early_stopping: false
   early_stopping_patience: 20
   early_stopping_min_delta: 0.001
-  early_stopping_use_ema: true
+  early_stopping_use_ema: false
   clip_max_norm: 0.1
   checkpoint_interval: 10
   progress_bar: true
   tensorboard: false
   wandb: false
-  # The prepared baseline has train/valid only. RF-DETR 1.5.2 would require a
-  # test/ folder when run_test=true, so keep this false.
   run_test: false
   resume: null
-  select_best_by_map50: true
+  select_best_by_map50: false
   device: cuda
 
 augmentation:
-  # RF-DETR 1.5.2 uses its official AlbumentationsWrapper + aug_config.
   square_resize_div_64: true
   multi_scale: false
   expanded_scales: false
   do_random_resize_via_padding: false
-  # Disable the hard-wired 50/50 resize->crop->resize branch in RF-DETR 1.5.2;
-  # tiny/border objects should not be discarded in this 25-frame baseline.
   disable_builtin_random_crop: true
   hflip: 0.5
   vflip: 0.5

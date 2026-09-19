@@ -11,7 +11,10 @@ data:
   target_height: 540
   interpolation: INTER_AREA
   split:
-    strategy: blocked_holdout
+    # Final baseline: several challenge classes occur in only one/few frames, so a
+    # holdout can remove their only supervised example. Keep blocked_holdout support
+    # in code for diagnostics, but train the final model on all labeled frames.
+    strategy: all_frames
     val_count: 5
     purge_gap: 1
     val_position: end
@@ -22,7 +25,6 @@ model:
   variant: s
   pretrained: true
   pretrained_weights: yolo26s.pt
-  # Published YOLO26 Objects365-stage checkpoint. Optional only; E1 defaults to standard COCO-stage yolo26s.pt.
   objects365_weights: yolo26s-objv1-150.pt
   deployment_weights: weights/challenge/E1_yolo26s_best.pt
   imgsz: 960
@@ -35,7 +37,11 @@ training:
   optimizer: AdamW
   learning_rate: 0.001
   weight_decay: 0.0005
+  # No independent validation exists in all_frames mode.
+  validate_during_training: false
+  early_stopping: false
   early_stopping_patience: 30
+  select_best_by_map50: false
   checkpoint_interval: 10
   deterministic: false
   amp: true

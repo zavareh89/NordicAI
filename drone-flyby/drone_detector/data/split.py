@@ -5,6 +5,19 @@ from typing import Iterable
 from ..types import SplitDefinition
 
 
+def all_frames_split(frame_ids: Iterable[int]) -> SplitDefinition:
+    """Use every labeled frame for final training.
+
+    No statistically independent validation set exists in this mode. Exporters may
+    create a *framework-only* validation mirror when a backend requires a valid/
+    directory, but those mirrored metrics must never be reported as held-out results.
+    """
+    ids = tuple(sorted(set(int(v) for v in frame_ids)))
+    if not ids:
+        raise ValueError("At least one frame is required")
+    return SplitDefinition(train_frame_ids=ids, val_frame_ids=(), purged_frame_ids=())
+
+
 def blocked_holdout_split(
     frame_ids: Iterable[int],
     *,
@@ -33,12 +46,20 @@ def blocked_holdout_split(
 
     purge_start = max(0, val_start - purge_gap)
     purge_end = min(len(ids), val_end + purge_gap)
-    purged = tuple(ids[i] for i in range(purge_start, purge_end) if not (val_start <= i < val_end))
+    purged = tuple(
+        ids[i]
+        for i in range(purge_start, purge_end)
+        if not (val_start <= i < val_end)
+    )
     excluded = set(val_ids) | set(purged)
     train_ids = tuple(frame for frame in ids if frame not in excluded)
     if not train_ids:
         raise ValueError("Split settings leave no training frames")
-    return SplitDefinition(train_frame_ids=train_ids, val_frame_ids=val_ids, purged_frame_ids=purged)
+    return SplitDefinition(
+        train_frame_ids=train_ids,
+        val_frame_ids=val_ids,
+        purged_frame_ids=purged,
+    )
 
 
 def blocked_cross_validation(
@@ -56,7 +77,11 @@ def blocked_cross_validation(
         val_ids = ids[start:end]
         purge_start = max(0, start - purge_gap)
         purge_end = min(len(ids), end + purge_gap)
-        purged = tuple(ids[i] for i in range(purge_start, purge_end) if not (start <= i < end))
+        purged = tuple(
+            ids[i]
+            for i in range(purge_start, purge_end)
+            if not (start <= i < end)
+        )
         excluded = set(val_ids) | set(purged)
         train_ids = tuple(frame for frame in ids if frame not in excluded)
         if train_ids:

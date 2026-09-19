@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 from typing import Any
@@ -30,10 +31,32 @@ def _assert_rfdetr_152() -> str:
     return installed
 
 
+def _load_split_metadata(cfg: dict[str, Any]) -> dict[str, Any]:
+    prepared_root = resolve_path(cfg, cfg["paths"].get("prepared_root", "prepared"))
+    path = prepared_root / "split.json"
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Missing {path}. Run `python scripts/prepare_dataset.py` first."
+        )
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _last_rfdetr_checkpoint(backend_dir: Path) -> Path | None:
+    # RF-DETR 1.5.2 rewrites checkpoint.pth each epoch. Prefer it for final all-frame
+    # training because no independent validation metric exists to define "best".
+    checkpoint = backend_dir / "checkpoint.pth"
+    if checkpoint.is_file():
+        return checkpoint
+    periodic = sorted(backend_dir.glob("checkpoint[0-9][0-9][0-9][0-9].pth"))
+    return periodic[-1] if periodic else None
+
+
 def train_rfdetr(cfg: dict[str, Any]) -> Path:
     rf_version = _assert_rfdetr_152()
     paths = prepare_experiment(cfg)
     classes = get_challenge_classes()
+    split_meta = _load_split_metadata(cfg)
+    independent_val = bool(split_meta.get("validation_is_independent", False))
 
     pretrained = resolve_path(
         cfg,
@@ -56,69 +79,87 @@ def train_rfdetr(cfg: dict[str, Any]) -> Path:
     missing = [str(p) for p in required if not p.is_file()]
     if missing:
         raise FileNotFoundError(
-            "RF-DETR dataset is not prepared. Missing: " + ", ".join(missing) +
-            ". Run `python scripts/prepare_dataset.py` first."
+            "RF-DETR dataset is not prepared. Missing: "
+            + ", ".join(missing)
+            + ". Run `python scripts/prepare_dataset.py` first."
         )
 
     detector = RFDETRSmallDetector(cfg, classes)
     detector.load(str(pretrained))
-
     backend_dir = paths.logs / "rfdetr"
     backend_dir.mkdir(parents=True, exist_ok=True)
     detector.train(str(dataset_root), str(backend_dir))
 
-    # RF-DETR 1.5.2 writes checkpoint_best_total.pth after training and also keeps
-    # regular/EMA/periodic checkpoints. Do not assume Lightning last.ckpt names.
     framework_best = backend_dir / "checkpoint_best_total.pth"
     if not framework_best.is_file():
         fallbacks = [
             backend_dir / "checkpoint_best_ema.pth",
             backend_dir / "checkpoint_best_regular.pth",
-            backend_dir / "checkpoint.pth",
         ]
-        framework_best = next((p for p in fallbacks if p.is_file()), framework_best)
-    if not framework_best.is_file():
+        framework_best = next(
+            (p for p in fallbacks if p.is_file()), framework_best
+        )
+    last_checkpoint = _last_rfdetr_checkpoint(backend_dir)
+    if last_checkpoint is None and not framework_best.is_file():
         raise FileNotFoundError(
             f"RF-DETR 1.5.2 training finished without an expected checkpoint in {backend_dir}"
         )
 
-    copy_if_exists(framework_best, paths.checkpoints / "framework_best.pth")
-    copy_if_exists(backend_dir / "checkpoint.pth", paths.checkpoints / "last.pth")
+    if framework_best.is_file():
+        copy_if_exists(framework_best, paths.checkpoints / "framework_best.pth")
+    if last_checkpoint is not None:
+        copy_if_exists(last_checkpoint, paths.checkpoints / "last.pth")
 
-    candidates = rfdetr_checkpoint_candidates(backend_dir)
-    if bool(cfg["training"].get("select_best_by_map50", True)):
+    if independent_val and bool(cfg["training"].get("select_best_by_map50", True)):
         selected, _ = select_best_checkpoint_by_map50(
             cfg,
-            candidates,
+            rfdetr_checkpoint_candidates(backend_dir),
             report_path=paths.root / "checkpoint_selection.json",
         )
+        selection_metric = "mAP@0.50"
     else:
-        selected = framework_best
+        selected = last_checkpoint if last_checkpoint is not None else framework_best
+        selection_metric = "last_epoch_all_frames_no_independent_validation"
         write_json(
             paths.root / "checkpoint_selection.json",
             {
-                "selection_metric": "framework_best_mAP50_95",
+                "selection_metric": selection_metric,
                 "selected_checkpoint": str(selected),
-                "note": "AP@0.50 post-selection disabled by config",
+                "validation_is_independent": False,
+                "note": (
+                    "RF-DETR valid/ mirrors train/ only because 1.5.2 requires it. "
+                    "Mirrored validation metrics are intentionally ignored."
+                ),
             },
         )
 
     selected_copy = paths.checkpoints / "selected_best.pth"
     shutil.copy2(selected, selected_copy)
-
     final = paths.final_model / "E2_rfdetr_small_best.pth"
     shutil.copy2(selected, final)
-
     challenge_checkpoint = resolve_path(cfg, cfg["model"]["deployment_weights"])
     challenge_checkpoint.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(selected, challenge_checkpoint)
 
-    final_metrics, final_predictions = evaluate_checkpoint(cfg, selected)
-    write_json(paths.root / "metrics.json", final_metrics)
-    write_json(
-        paths.predictions / "blocked_validation_predictions.json",
-        final_predictions,
-    )
+    if independent_val:
+        final_metrics, final_predictions = evaluate_checkpoint(cfg, selected)
+        write_json(paths.root / "metrics.json", final_metrics)
+        write_json(
+            paths.predictions / "blocked_validation_predictions.json",
+            final_predictions,
+        )
+    else:
+        write_json(
+            paths.root / "metrics.json",
+            {
+                "status": "not_computed",
+                "reason": "no_independent_validation_all_frames_training",
+                "note": (
+                    "The RF-DETR valid/ directory mirrors train/ for framework "
+                    "compatibility; its scores are not held-out metrics."
+                ),
+            },
+        )
 
     record_training_manifest(
         cfg,
@@ -127,11 +168,12 @@ def train_rfdetr(cfg: dict[str, Any]) -> Path:
             "rfdetr_version": rf_version,
             "pretrained_checkpoint": str(pretrained),
             "dataset": str(dataset_root),
-            "framework_best_checkpoint": str(framework_best),
-            "selection_metric": (
-                "mAP@0.50" if bool(cfg["training"].get("select_best_by_map50", True))
-                else "framework_best_mAP50_95"
+            "split_strategy": split_meta.get("strategy"),
+            "validation_is_independent": independent_val,
+            "framework_best_checkpoint": (
+                str(framework_best) if framework_best.is_file() else None
             ),
+            "selection_metric": selection_metric,
             "selected_source_checkpoint": str(selected),
             "best_checkpoint": str(selected_copy),
             "final_checkpoint": str(final),

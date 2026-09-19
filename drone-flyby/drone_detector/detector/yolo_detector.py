@@ -30,7 +30,9 @@ class YOLO26Detector(BaseDetector):
         aug = self.cfg.get("augmentation", {})
         blur_p = float(aug.get("gaussian_blur_probability", 0.0))
         noise_p = float(aug.get("gaussian_noise_probability", 0.0))
-        brightness_contrast_p = float(aug.get("brightness_contrast_probability", 0.0))
+        brightness_contrast_p = float(
+            aug.get("brightness_contrast_probability", 0.0)
+        )
         if max(blur_p, noise_p, brightness_contrast_p) <= 0:
             return None
         import albumentations as A
@@ -45,11 +47,17 @@ class YOLO26Detector(BaseDetector):
                 )
             )
         if blur_p > 0:
-            transforms.append(A.GaussianBlur(blur_limit=(3, 3), sigma_limit=(0.1, 0.8), p=blur_p))
+            transforms.append(
+                A.GaussianBlur(
+                    blur_limit=(3, 3), sigma_limit=(0.1, 0.8), p=blur_p
+                )
+            )
         if noise_p > 0:
             transforms.append(
                 A.GaussNoise(
-                    std_range=tuple(aug.get("gaussian_noise_std_range", [0.005, 0.015])),
+                    std_range=tuple(
+                        aug.get("gaussian_noise_std_range", [0.005, 0.015])
+                    ),
                     p=noise_p,
                 )
             )
@@ -62,19 +70,28 @@ class YOLO26Detector(BaseDetector):
         aug = self.cfg["augmentation"]
         model_cfg = self.cfg["model"]
         custom_aug = self._build_custom_albumentations()
+        validate = bool(training.get("validate_during_training", True))
+        epochs = int(training["epochs"])
         kwargs: dict[str, Any] = {
             "data": dataset_path,
             "project": str(Path(output_dir).parent),
             "name": Path(output_dir).name,
             "exist_ok": True,
-            "epochs": int(training["epochs"]),
+            "epochs": epochs,
             "batch": int(training["batch_size"]),
             "workers": int(training.get("workers", 4)),
             "imgsz": int(model_cfg.get("imgsz", 960)),
             "optimizer": str(training.get("optimizer", "AdamW")),
             "lr0": float(training.get("learning_rate", 1e-3)),
             "weight_decay": float(training.get("weight_decay", 5e-4)),
-            "patience": int(training.get("early_stopping_patience", 30)),
+            "val": validate,
+            # When no independent validation exists, make early stopping effectively
+            # impossible even if Ultralytics internally instantiates its stopper.
+            "patience": (
+                int(training.get("early_stopping_patience", 30))
+                if validate and bool(training.get("early_stopping", True))
+                else epochs + 1
+            ),
             "seed": int(self.cfg["experiment"].get("seed", 42)),
             "deterministic": bool(training.get("deterministic", False)),
             "device": training.get("device", 0),
@@ -141,18 +158,14 @@ class YOLO26Detector(BaseDetector):
 
 
 def _ultralytics_scale_amplitude(value: Any) -> float:
-    """Translate an intuitive multiplicative scale range into Ultralytics `scale`.
-
-    Ultralytics defines `scale=s` as a random multiplicative zoom in approximately
-    [1-s, 1+s]. The configs intentionally store the human-readable [min, max]
-    range requested for this experiment.
-    """
     if isinstance(value, (list, tuple)):
         if len(value) != 2:
             raise ValueError("augmentation.scale must contain [min_scale, max_scale]")
         low, high = (float(value[0]), float(value[1]))
         if not (0.0 < low <= 1.0 <= high):
-            raise ValueError("augmentation.scale range must satisfy 0 < min <= 1 <= max")
+            raise ValueError(
+                "augmentation.scale range must satisfy 0 < min <= 1 <= max"
+            )
         return max(1.0 - low, high - 1.0)
     scalar = float(value)
     if not 0.0 <= scalar <= 1.0:
@@ -161,4 +174,6 @@ def _ultralytics_scale_amplitude(value: Any) -> float:
 
 
 def training_device_for_inference(cfg: dict[str, Any]) -> Any:
-    return cfg.get("inference", {}).get("device", cfg.get("training", {}).get("device", 0))
+    return cfg.get("inference", {}).get(
+        "device", cfg.get("training", {}).get("device", 0)
+    )

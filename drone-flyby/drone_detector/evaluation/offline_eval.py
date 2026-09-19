@@ -17,10 +17,9 @@ from ..types import FrameSample
 from .metrics import coco_map50, precision_recall_at_iou50
 
 
-def _load_split(path: Path) -> dict[str, list[int]]:
+def _load_split(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
-        split = json.load(handle)
-    return split
+        return json.load(handle)
 
 
 def validation_samples(cfg: dict[str, Any]) -> tuple[FrameSample, ...]:
@@ -29,12 +28,26 @@ def validation_samples(cfg: dict[str, Any]) -> tuple[FrameSample, ...]:
     source_samples = discover_scene_samples(scene_dir, class_names=classes)
     prepared_root = resolve_path(cfg, cfg["paths"].get("prepared_root", "prepared"))
     split = _load_split(prepared_root / "split.json")
+
+    if not bool(split.get("validation_is_independent", bool(split.get("val_frame_ids")))):
+        raise RuntimeError(
+            "No independent validation set exists because data.split.strategy=all_frames. "
+            "Do not report train-mirror metrics as held-out performance. For a diagnostic "
+            "offline estimate, temporarily use data.split.strategy=blocked_holdout and "
+            "re-run prepare_dataset.py."
+        )
+
     val_ids = set(int(v) for v in split["val_frame_ids"])
     output = []
     for source in source_samples:
         if source.frame_id not in val_ids:
             continue
-        image_path = prepared_root / "level0" / "images" / f"frame_{source.frame_id:06d}.png"
+        image_path = (
+            prepared_root
+            / "level0"
+            / "images"
+            / f"frame_{source.frame_id:06d}.png"
+        )
         if not image_path.is_file():
             raise FileNotFoundError(f"Missing prepared Level-0 image {image_path}")
         output.append(
@@ -56,13 +69,14 @@ def _default_weights(cfg: dict[str, Any], paths: ExperimentPaths) -> Path:
     if family == "yolo26":
         candidates = [
             paths.final_model / "E1_yolo26s_best.pt",
-            paths.checkpoints / "best.pt",
+            paths.checkpoints / "selected_best.pt",
+            paths.checkpoints / "last.pt",
         ]
     else:
         candidates = [
             paths.final_model / "E2_rfdetr_small_best.pth",
             paths.checkpoints / "selected_best.pth",
-            paths.checkpoints / "checkpoint_best_total.pth",
+            paths.checkpoints / "last.pth",
         ]
     for candidate in candidates:
         if candidate.is_file():
@@ -82,7 +96,6 @@ def evaluate_checkpoint(
     samples: tuple[FrameSample, ...] | None = None,
     warmup_iterations: int | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Evaluate one checkpoint without mutating experiment result files."""
     import cv2
 
     classes = get_challenge_classes()
@@ -137,12 +150,17 @@ def evaluate_checkpoint(
     return metrics, serializable_predictions
 
 
-def evaluate_offline(cfg: dict[str, Any], *, weights: str | Path | None = None) -> dict[str, Any]:
+def evaluate_offline(
+    cfg: dict[str, Any], *, weights: str | Path | None = None
+) -> dict[str, Any]:
     paths = ExperimentPaths.from_config(cfg)
     paths.create()
     snapshot_config(cfg, paths)
     weight_path = Path(weights).resolve() if weights else _default_weights(cfg, paths)
     metrics, serializable_predictions = evaluate_checkpoint(cfg, weight_path)
     write_json(paths.root / "metrics.json", metrics)
-    write_json(paths.predictions / "blocked_validation_predictions.json", serializable_predictions)
+    write_json(
+        paths.predictions / "blocked_validation_predictions.json",
+        serializable_predictions,
+    )
     return metrics
