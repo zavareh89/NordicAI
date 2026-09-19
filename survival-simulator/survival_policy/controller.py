@@ -12,6 +12,8 @@ from .coordination import (
     local_competition_cost,
     local_density,
     local_fruit_owner,
+    local_fruit_owner_eta,
+    select_reproduction_slots,
 )
 from .geometry import (
     Vec2,
@@ -112,8 +114,39 @@ class SurvivalController:
             bonus_max=self.config.dynamic_population_bonus,
             population_trend=self.memory.population_trend,
         )
+        if self.config.architecture_v3_enabled:
+            raw_capacity = float(population_context.carrying_capacity)
+            if self.memory.smoothed_carrying_capacity is None:
+                self.memory.smoothed_carrying_capacity = raw_capacity
+            else:
+                alpha = self.config.population_capacity_smoothing
+                self.memory.smoothed_carrying_capacity = (
+                    (1.0 - alpha) * self.memory.smoothed_carrying_capacity + alpha * raw_capacity
+                )
+            population_context = PopulationContext(
+                n_agents=population_context.n_agents,
+                average_energy_ratio=population_context.average_energy_ratio,
+                fruit_sightings_per_agent=population_context.fruit_sightings_per_agent,
+                predator_sightings_per_agent=population_context.predator_sightings_per_agent,
+                population_trend=population_context.population_trend,
+                carrying_capacity=max(2, int(round(self.memory.smoothed_carrying_capacity))),
+            )
+            spawn_allowed_ids = select_reproduction_slots(
+                normalized,
+                slots=self.config.reproduction_slots_per_tick,
+                predator_danger_distance=self.config.reproduction_danger_distance,
+                local_density_radius=self.config.herbivore_repulsion_radius * 1.5,
+                min_energy=self.config.spawn_old_age_min_energy,
+            )
+        else:
+            spawn_allowed_ids = set(active_ids)
         decisions = [
-            self._decide_agent(s, n_agents=n_agents, population_context=population_context)
+            self._decide_agent(
+                s,
+                n_agents=n_agents,
+                population_context=population_context,
+                spawn_allowed_ids=spawn_allowed_ids,
+            )
             for s in normalized
         ]
         return [d.action_dict() for d in decisions]
@@ -121,28 +154,44 @@ class SurvivalController:
     def _agent_rng(self, agent_id: int, epoch: int) -> random.Random:
         return random.Random(stable_int_seed(self.config.master_seed, agent_id, epoch))
 
-    def _ensure_exploration_heading(self, mem: AgentMemory) -> None:
-        if mem.tick < mem.next_exploration_change_tick and mem.next_exploration_change_tick > 0:
-            return
-        epoch = mem.tick // max(1, self.config.exploration_change_interval)
+    def _ensure_exploration_heading(self, mem: AgentMemory, *, force_event: bool = False) -> None:
+        cfg = self.config
+        if not cfg.architecture_v3_enabled:
+            if mem.tick < mem.next_exploration_change_tick and mem.next_exploration_change_tick > 0:
+                return
+            epoch = mem.tick // max(1, cfg.exploration_change_interval)
+        else:
+            # V3 is event-driven: retain a sector while progress is plausible and
+            # only rotate on a meaningful event. A long fallback prevents an agent
+            # from being permanently trapped in one unproductive sector.
+            stale = (
+                mem.exploration_last_change_tick >= 0
+                and mem.tick - mem.exploration_last_change_tick >= cfg.exploration_stale_fallback_ticks
+            )
+            no_food_event = mem.no_food_ticks >= cfg.exploration_no_food_ticks
+            if mem.exploration_last_change_tick >= 0 and not (force_event or stale or no_food_event):
+                return
+            mem.exploration_epoch += 1
+            epoch = mem.exploration_epoch
+
         rng = self._agent_rng(mem.agent_id, epoch)
-        if not self.config.architecture_v2_enabled:
+        if not cfg.architecture_v2_enabled:
             phase = (mem.agent_id * 2.399963229728653) % (2.0 * math.pi)
             jitter = rng.uniform(-0.65, 0.65)
         else:
             active_ids = self.memory.active_ids
             if mem.agent_id in active_ids and active_ids:
                 rank = active_ids.index(mem.agent_id)
-                # Equal angular sectors reduce correlated exploration. A small
-                # deterministic rotation each epoch avoids permanently assigning an
-                # agent to the same corridor.
                 phase = 2.0 * math.pi * rank / len(active_ids)
                 phase += (epoch % max(1, len(active_ids))) * (math.pi / max(2, len(active_ids)))
             else:
                 phase = (mem.agent_id * 2.399963229728653) % (2.0 * math.pi)
             jitter = rng.uniform(-0.22, 0.22)
         mem.exploration_world_angle = wrap_angle(phase + jitter)
-        mem.next_exploration_change_tick = mem.tick + self.config.exploration_change_interval
+        mem.exploration_last_change_tick = mem.tick
+        # Retained for v1/v2 compatibility/debugging; v3 does not use this as
+        # its primary switching mechanism.
+        mem.next_exploration_change_tick = mem.tick + cfg.exploration_change_interval
 
     def _nearest_predator(self, predators: Sequence[Mapping]) -> Optional[Mapping]:
         valid = []
@@ -253,6 +302,7 @@ class SurvivalController:
         visible_agents: Sequence[Mapping],
         predators: Sequence[Mapping],
         mem: AgentMemory,
+        self_speed: float = 10.0,
     ) -> float:
         cfg = self.config
         try:
@@ -261,18 +311,33 @@ class SurvivalController:
         except (TypeError, ValueError):
             return -math.inf
 
-        utility = -cfg.fruit_distance_penalty * d
+        if cfg.architecture_v3_enabled:
+            # V3 targets time-to-capture rather than raw distance. The factor of
+            # ten preserves the historical utility scale for a typical speed≈10.
+            travel_units = d * (10.0 / max(self_speed, 1e-6))
+            utility = -cfg.fruit_distance_penalty * travel_units
+        else:
+            utility = -cfg.fruit_distance_penalty * d
 
         # Stronger local assignment than v1: if another mutually visible
         # herbivore has the clearly better claim, this fruit is heavily
         # penalized rather than merely receiving a soft crowding penalty.
         if cfg.architecture_v2_enabled:
-            owner = local_fruit_owner(
-                self_id=agent_id,
-                fruit_distance=d,
-                fruit_angle=a,
-                visible_agents=visible_agents,
-            )
+            if cfg.architecture_v3_enabled:
+                owner = local_fruit_owner_eta(
+                    self_id=agent_id,
+                    fruit_distance=d,
+                    fruit_angle=a,
+                    self_speed=self_speed,
+                    visible_agents=visible_agents,
+                )
+            else:
+                owner = local_fruit_owner(
+                    self_id=agent_id,
+                    fruit_distance=d,
+                    fruit_angle=a,
+                    visible_agents=visible_agents,
+                )
             if owner != agent_id:
                 utility -= 2.0 * cfg.fruit_competition_penalty
 
@@ -317,6 +382,7 @@ class SurvivalController:
         visible_agents: Sequence[Mapping],
         predators: Sequence[Mapping],
         mem: AgentMemory,
+        self_speed: float = 10.0,
     ) -> Optional[Mapping]:
         if not fruits:
             return None
@@ -327,6 +393,7 @@ class SurvivalController:
                 visible_agents=visible_agents,
                 predators=predators,
                 mem=mem,
+                self_speed=self_speed,
             ), f)
             for f in fruits
         ]
@@ -419,6 +486,7 @@ class SurvivalController:
         closest_edge_distance: float,
         carrying_capacity: int,
         spawn_threshold: float,
+        spawn_allowed: bool,
     ) -> BehaviorState:
         cfg = self.config
         ratio = energy / max(max_energy, 1.0)
@@ -443,7 +511,8 @@ class SurvivalController:
             return BehaviorState.CRITICAL_ENERGY_FORAGING
 
         can_spawn = (
-            mem.tick >= mem.reproduction_cooldown_until
+            spawn_allowed
+            and mem.tick >= mem.reproduction_cooldown_until
             and n_agents < carrying_capacity
             and nearest_predator_distance > cfg.reproduction_danger_distance
             and (
@@ -651,6 +720,7 @@ class SurvivalController:
         *,
         n_agents: int,
         population_context: PopulationContext,
+        spawn_allowed_ids: set[int],
     ) -> Decision:
         cfg = self.config
         agent_id = int(status.get("agent_id"))
@@ -662,6 +732,8 @@ class SurvivalController:
         mem.begin_tick(energy, age)
 
         groups = self._split_observations(status.get("observations") or [])
+        if cfg.architecture_v3_enabled:
+            mem.no_food_ticks = 0 if groups["Fruit"] else mem.no_food_ticks + 1
         if cfg.architecture_v2_enabled:
             # Replace raw fruit observations with copies carrying persistent local
             # pseudo-IDs. This affects only controller memory, never the API payload.
@@ -689,6 +761,7 @@ class SurvivalController:
             visible_agents=groups["Agent"],
             predators=groups["Predator"],
             mem=mem,
+            self_speed=max(1e-6, float(status.get("speed", 0.0) or 0.0)),
         )
 
         if chosen_fruit is not None:
@@ -734,7 +807,18 @@ class SurvivalController:
             closest_edge_distance=closest_edge_distance,
             carrying_capacity=(population_context.carrying_capacity if cfg.architecture_v2_enabled else cfg.population_soft_cap),
             spawn_threshold=spawn_threshold,
+            spawn_allowed=(agent_id in spawn_allowed_ids),
         )
+        previous_predator_state = mem.was_in_predator_state
+        current_predator_state = state in (BehaviorState.EMERGENCY_ESCAPE, BehaviorState.PREDATOR_EVASION)
+        if cfg.architecture_v3_enabled and state == BehaviorState.EXPLORATION:
+            exploration_event = (
+                (previous_predator_state and not current_predator_state)
+                or mem.target_stall_ticks >= cfg.stuck_tick_threshold
+                or closest_edge_distance <= cfg.wall_critical_distance
+            )
+            self._ensure_exploration_heading(mem, force_event=exploration_event)
+        mem.was_in_predator_state = current_predator_state
         mem.set_state(state)
 
         # V1 hierarchy/potential field remains the proposal generator.
@@ -764,6 +848,7 @@ class SurvivalController:
                 nominal_move_distance=move_distance,
                 normal_speed=normal_speed,
                 sprint_speed=sprint_speed,
+                max_energy=max_energy,
                 state_name=state.value,
                 energy_ratio=energy_ratio,
                 chosen_fruit=chosen_fruit,

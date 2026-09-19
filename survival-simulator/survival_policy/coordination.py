@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import math
 from typing import Iterable, Mapping, Sequence
 
-from .geometry import polar_to_cart
+from .geometry import polar_to_cart, unit_from_angle, wrap_angle
 
 
 @dataclass(frozen=True)
@@ -154,3 +154,127 @@ def build_population_context(
         population_trend=population_trend,
         carrying_capacity=capacity,
     )
+
+
+def local_fruit_owner_eta(
+    *,
+    self_id: int,
+    fruit_distance: float,
+    fruit_angle: float,
+    self_speed: float,
+    visible_agents: Iterable[Mapping],
+    tie_seconds: float = 0.35,
+) -> int:
+    """Estimate local fruit ownership by time-to-capture rather than distance.
+
+    Other-agent absolute speed is not exposed by the public observation. We use
+    the observing agent's speed as a common scale and, when ``rel_dir`` exists,
+    adjust the estimate according to whether the competitor is already moving
+    toward or away from the fruit. This is strictly local and deterministic.
+    """
+    speed = max(1e-6, float(self_speed))
+    fx, fy = polar_to_cart(fruit_distance, fruit_angle)
+    owner = int(self_id)
+    best_eta = float(fruit_distance) / speed
+    for other in visible_agents:
+        try:
+            oid = int(other.get("id"))
+            od = float(other.get("distance"))
+            oa = float(other.get("angle"))
+        except (TypeError, ValueError):
+            continue
+        ox, oy = polar_to_cart(od, oa)
+        dx, dy = fx - ox, fy - oy
+        d_to_fruit = math.hypot(dx, dy)
+        if d_to_fruit <= 1e-9:
+            eta = 0.0
+        else:
+            alignment = 0.0
+            rel_dir = other.get("rel_dir")
+            if rel_dir is not None:
+                try:
+                    heading = wrap_angle(oa + math.pi - float(rel_dir))
+                    ux, uy = unit_from_angle(heading)
+                    alignment = (ux * dx + uy * dy) / d_to_fruit
+                except (TypeError, ValueError):
+                    alignment = 0.0
+            # Same unknown speed scale for all visible herbivores, modulated by
+            # heading. The clamp prevents nearly-zero or implausibly high ETA
+            # speeds from noisy relative-direction observations.
+            effective_speed = speed * max(0.45, min(1.25, 0.85 + 0.35 * alignment))
+            eta = d_to_fruit / effective_speed
+        if eta + tie_seconds < best_eta or (abs(eta - best_eta) <= tie_seconds and oid < owner):
+            owner, best_eta = oid, eta
+    return owner
+
+
+def reproduction_priority(
+    status: Mapping,
+    *,
+    predator_danger_distance: float,
+    local_density_radius: float,
+) -> float:
+    """Cheap population-level score for allocating scarce reproduction slots."""
+    energy = float(status.get("energy", 0.0) or 0.0)
+    max_energy = max(1.0, float(status.get("max_energy", 1.0) or 1.0))
+    ratio = energy / max_energy
+    fruit_count = 0
+    density = 0
+    nearest_pred = math.inf
+    for obs in status.get("observations") or []:
+        if not isinstance(obs, Mapping):
+            continue
+        typ = obs.get("type")
+        if typ == "Fruit":
+            fruit_count += 1
+        elif typ == "Predator":
+            try:
+                nearest_pred = min(nearest_pred, float(obs.get("distance")))
+            except (TypeError, ValueError):
+                pass
+        elif typ == "Agent":
+            try:
+                if float(obs.get("distance")) <= local_density_radius:
+                    density += 1
+            except (TypeError, ValueError):
+                pass
+    danger = 0.0 if not math.isfinite(nearest_pred) else max(
+        0.0, 1.0 - nearest_pred / max(predator_danger_distance * 1.5, 1.0)
+    )
+    return 2.2 * ratio + 0.16 * min(fruit_count, 5) - 0.20 * density - 1.8 * danger
+
+
+def select_reproduction_slots(
+    statuses: Sequence[Mapping],
+    *,
+    slots: int,
+    predator_danger_distance: float,
+    local_density_radius: float,
+    min_energy: float = 0.0,
+) -> set[int]:
+    """Return IDs of the best current reproduction candidates.
+
+    Eligibility thresholds remain in the controller. This function only avoids
+    synchronized spawn bursts by ranking agents before state selection.
+    """
+    if slots <= 0:
+        return set()
+    ranked: list[tuple[float, int]] = []
+    for status in statuses:
+        try:
+            aid = int(status.get("agent_id"))
+            energy = float(status.get("energy", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if energy < min_energy:
+            continue
+        ranked.append((
+            reproduction_priority(
+                status,
+                predator_danger_distance=predator_danger_distance,
+                local_density_radius=local_density_radius,
+            ),
+            aid,
+        ))
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    return {aid for _, aid in ranked[:slots]}

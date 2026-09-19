@@ -63,6 +63,10 @@ class AgentMemory:
     heading_estimate: float = 0.0
     exploration_world_angle: float = 0.0
     next_exploration_change_tick: int = 0
+    exploration_last_change_tick: int = -1
+    exploration_epoch: int = 0
+    no_food_ticks: int = 0
+    was_in_predator_state: bool = False
 
     target_world_bearing: Optional[float] = None
     target_distance: Optional[float] = None
@@ -227,12 +231,14 @@ class PopulationMemory:
     episode_index: int = 0
     active_ids: tuple[int, ...] = ()
     recent_population: Deque[int] = field(default_factory=lambda: deque(maxlen=16))
+    smoothed_carrying_capacity: Optional[float] = None
 
     def reset(self) -> None:
         self.agents.clear()
         self.last_sim_time = None
         self.active_ids = ()
         self.recent_population.clear()
+        self.smoothed_carrying_capacity = None
         self.episode_index += 1
 
     def get_or_create(self, agent_id: int) -> AgentMemory:

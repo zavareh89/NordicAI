@@ -14,19 +14,19 @@ from optuna.trial import TrialState
 from survival_policy.config import PolicyConfig
 
 
-TOTAL_HPO_CASES = 200
-# C002-C201 are the original v1 HPO cases. Continue numbering rather than
-# overwriting the historical study.
-FIRST_CASE_NUMBER = 202
+TOTAL_HPO_CASES = 100
+# The second focused v2 study produced C202-C401. Continue numbering without
+# overwriting historical candidates; C402 is the exact C376-v3 baseline.
+FIRST_CASE_NUMBER = 402
 DEFAULT_N_CORES = 30
-# 1000-1029 were used by the original HPO, 50000-50029 for v1 holdout, and
-# 60000-60029 for the v1-v2 architecture comparison. Use a fresh tuning set.
-DEFAULT_BASE_SEED = 70000
-DEFAULT_SAMPLER_SEED = 20260919
+# Keep all earlier tuning/holdout seed ranges isolated. V3 HPO uses a fresh
+# common-random-number batch so every candidate sees identical simulations.
+DEFAULT_BASE_SEED = 90000
+DEFAULT_SAMPLER_SEED = 20260920
 DEFAULT_STARTUP_TRIALS = 15
-DEFAULT_STUDY_NAME = "survival_v2_focused_tpe_200"
-DEFAULT_RESULTS_ROOT = Path("results_v2_hpo")
-DEFAULT_BASE_CONFIG_PATH = Path(__file__).resolve().parent / "config" / "C167_v2_hpo_base.json"
+DEFAULT_STUDY_NAME = "survival_v3_focused_tpe_100"
+DEFAULT_RESULTS_ROOT = Path("results_v3_hpo")
+DEFAULT_BASE_CONFIG_PATH = Path(__file__).resolve().parent / "config" / "C376_v3_hpo_base.json"
 
 
 @dataclass(frozen=True)
@@ -37,77 +37,60 @@ class SearchRange:
     log: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "kind": self.kind,
-            "low": self.low,
-            "high": self.high,
-            "log": self.log,
-        }
+        return {"kind": self.kind, "low": self.low, "high": self.high, "log": self.log}
 
 
-# Focused architecture-v2 HPO.
-#
-# The first 200 v1 trials already gave strong evidence for where most legacy
-# parameters should sit. C167 then won the unseen-seed comparison and v2 gave a
-# very large gain with those values. Reopening all 28 v1 dimensions would throw
-# away that information and make a 200-trial search unnecessarily sparse.
-#
-# Only parameters that (a) had a strong/boundary signal in v1 AND directly feed
-# the v2 threat/reproduction logic, or (b) are new high-level v2 planner controls
-# are searched here. Everything else is frozen to the holdout-selected C167-v2
-# base configuration.
+# V3 is a structural planner upgrade, so most well-converged v1/v2 values are
+# frozen to C376. Search only parameters whose semantics changed in v3 or whose
+# previous optimum sat on a meaningful boundary. Beam width and horizon are fixed
+# for the first v3 HPO because they directly control latency.
 SEARCH_SPACE: dict[str, SearchRange] = {
-    # Legacy parameters that still define v2 threat timing. These either hit an
-    # old search boundary or are used directly by the TTC/predictive planner.
-    "emergency_predator_distance": SearchRange("float", 33.0, 45.0),
-    "predator_danger_distance": SearchRange("float", 175.0, 225.0),
-    "predator_prediction_weight": SearchRange("float", 0.80, 1.15),
-    "escape_persistence_ticks": SearchRange("int", 9, 18),
-    "evasion_sprint_fraction": SearchRange("float", 0.75, 0.95),
-    "exploration_change_interval": SearchRange("int", 55, 100),
+    # Predator timing still interacts strongly with CPA/TTC rollout scoring.
+    "predator_danger_distance": SearchRange("float", 205.0, 245.0),
+    "escape_persistence_ticks": SearchRange("int", 14, 22),
+    "evasion_sprint_fraction": SearchRange("float", 0.88, 0.97),
+    "ttc_danger_ticks": SearchRange("float", 24.0, 38.0),
 
-    # Legacy target/reproduction parameters whose optimum was close to a search
-    # edge and whose semantics are still active under v2.
-    "fruit_distance_penalty": SearchRange("float", 0.013, 0.022),
-    "spawn_min_energy": SearchRange("float", 180.0, 225.0),
-    "population_soft_cap": SearchRange("int", 14, 20),
+    # Keep C376's successful coarse action envelope, but retune how future
+    # rollout steps branch and how safety/reward terms trade off.
+    "planner_angle_spread": SearchRange("float", 0.34, 0.49),
+    "planner_predator_weight": SearchRange("float", 4.4, 6.3),
+    "planner_food_weight": SearchRange("float", 1.8, 2.55),
+    "planner_followup_angle_spread": SearchRange("float", 0.12, 0.30),
+    "planner_rollout_discount": SearchRange("float", 0.76, 0.96),
+    "planner_cpa_weight": SearchRange("float", 0.80, 1.60),
+    "planner_energy_score_scale": SearchRange("float", 0.55, 1.15),
+    "planner_wall_clearance": SearchRange("float", 10.0, 16.0),
+    "planner_path_wall_soft_clearance": SearchRange("float", 22.0, 36.0),
 
-    # New v2 planner parameters with direct control over the final action.
-    "planner_horizon_steps": SearchRange("int", 1, 3),
-    "planner_angle_spread": SearchRange("float", 0.28, 0.60),
-    "planner_predator_weight": SearchRange("float", 2.8, 6.5),
-    "planner_food_weight": SearchRange("float", 1.1, 2.6),
-    "planner_energy_weight": SearchRange("float", 0.30, 0.90),
-    "planner_wall_clearance": SearchRange("float", 13.0, 24.0),
-
-    # New v2 state/coordination parameters.
-    "ttc_danger_ticks": SearchRange("float", 14.0, 34.0),
-    "dynamic_population_bonus": SearchRange("int", 3, 10),
+    # V3 population/exploration behavior is new enough to warrant a compact
+    # retune. The stable base population remains near C376's high-cap regime.
+    "population_soft_cap": SearchRange("int", 19, 24),
+    "population_capacity_smoothing": SearchRange("float", 0.10, 0.38),
+    "exploration_no_food_ticks": SearchRange("int", 60, 125),
+    "reproduction_slots_per_tick": SearchRange("int", 1, 2),
 }
 
-# Every field not listed above is deliberately fixed to the C167-v2 baseline.
 HPO_FIXED_FIELDS = set(PolicyConfig.__dataclass_fields__) - set(SEARCH_SPACE)
 
-# Stored alongside the search-space JSON so the reason for fixing/searching a
-# parameter is recoverable months later.
 SEARCH_RATIONALE: dict[str, str] = {
-    "emergency_predator_distance": "Close-range state boundary; v2 TTC changes when emergency mode should trigger.",
-    "predator_danger_distance": "Strong positive/boundary signal in v1 and base radius for v2 dynamic danger.",
-    "predator_prediction_weight": "Strong positive v1 signal and directly used by predictive planner geometry.",
-    "escape_persistence_ticks": "Hit the old upper boundary; important hysteresis against catastrophic predator failures.",
-    "evasion_sprint_fraction": "Directly sets the nominal v2 evasion action before candidate-distance scoring.",
-    "exploration_change_interval": "Strong positive/boundary v1 signal; v2 sector exploration changed its semantics and may benefit from longer persistence.",
-    "fruit_distance_penalty": "Strong positive/boundary v1 signal and still determines target selection before planning.",
-    "spawn_min_energy": "Strong v1 direction and remains the base of v2 dynamic reproduction threshold.",
-    "population_soft_cap": "Hit the old upper region and is the baseline of v2 carrying-capacity logic.",
-    "planner_horizon_steps": "Controls how far candidate actions are projected; new v2 decision parameter.",
-    "planner_angle_spread": "Controls directional alternatives around the v1 potential-field proposal.",
-    "planner_predator_weight": "Main safety term in final v2 action selection.",
-    "planner_food_weight": "Balances food progress against safety/energy in final v2 action selection.",
-    "planner_energy_weight": "Controls movement/turning economy in the final v2 action scorer.",
-    "planner_wall_clearance": "Hard predicted-clearance threshold; replaces much of v1 continuous wall forcing.",
-    "ttc_danger_ticks": "Sets predictive danger urgency and therefore tail-risk response.",
-    "dynamic_population_bonus": "Controls how far v2 carrying capacity can adapt above/below the C167 base cap.",
+    "predator_danger_distance": "C376/v2 favored very early danger awareness; CPA rollouts change the best radius.",
+    "escape_persistence_ticks": "C376 sat at the high end and v3 replans sequentially after an escape begins.",
+    "evasion_sprint_fraction": "High v2 values worked well; exact rollout energy accounting may shift the best sprint fraction.",
+    "ttc_danger_ticks": "Still gates high-level threat state while v3 uses candidate-specific CPA in the final action.",
+    "planner_angle_spread": "State-adaptive templates preserve the C376 envelope but may need a slightly different first-step spread.",
+    "planner_predator_weight": "Main high-level safety scale feeding the new CPA risk term.",
+    "planner_food_weight": "Balances capture progress against safety in cumulative rollout scoring.",
+    "planner_followup_angle_spread": "New v3 parameter controlling branching of future beam steps.",
+    "planner_rollout_discount": "New v3 temporal tradeoff between immediate and future action quality.",
+    "planner_cpa_weight": "New v3 closest-point-of-approach risk multiplier.",
+    "planner_energy_score_scale": "V3 uses a simulator-aligned cumulative energy estimate rather than the old free energy weight.",
+    "planner_wall_clearance": "V3 evaluates clearance along the actual path, so C376's endpoint threshold needs retuning.",
+    "planner_path_wall_soft_clearance": "New v3 soft path-clearance margin.",
+    "population_soft_cap": "C376 remained at the old upper boundary; v3 uses a smoother stable-capacity model.",
+    "population_capacity_smoothing": "New v3 parameter controlling how quickly carrying capacity reacts to noisy observations.",
+    "exploration_no_food_ticks": "V3 exploration is event-driven; this controls the no-food event rather than periodic timer rotation.",
+    "reproduction_slots_per_tick": "New v3 population-level coordination control preventing synchronized spawn bursts.",
 }
 
 OBJECTIVE_DESCRIPTION = "0.8 * mean(score) + 0.2 * p10(score)"
@@ -162,7 +145,7 @@ def objective_from_summary(summary: dict[str, Any], mode: str = "robust") -> flo
 
 
 def case_id_for_trial_number(trial_number: int) -> str:
-    """Map focused-v2 Optuna trial 0 to C202, after historical C002-C201."""
+    """Map focused-v3 Optuna trial 0 to C402, after historical C202-C401."""
     return f"C{trial_number + FIRST_CASE_NUMBER:03d}"
 
 
@@ -306,7 +289,7 @@ def write_global_reports(
 
     summary_payload = {
         "study_name": study.study_name,
-        "sampler": "Optuna TPESampler(multivariate=True), focused v2 search",
+        "sampler": "Optuna TPESampler(multivariate=True), focused v3 search",
         "sampler_seed": sampler_seed,
         "startup_trials": startup_trials,
         "target_hpo_cases": target_trials,
@@ -436,7 +419,7 @@ def _write_search_metadata(
 ) -> None:
     search_payload = {
         "base_config_hash": base_config.stable_hash,
-        "base_config_source": "holdout-selected C167 with architecture_v2_enabled=true",
+        "base_config_source": "selected C376 baseline with architecture_v3_enabled=true",
         "fixed_parameters": {name: getattr(base_config, name) for name in sorted(HPO_FIXED_FIELDS)},
         "search_space": {name: spec.to_dict() for name, spec in SEARCH_SPACE.items()},
         "search_rationale": SEARCH_RATIONALE,
@@ -448,7 +431,7 @@ def _write_search_metadata(
     )
 
     run_payload = {
-        "algorithm": "Optuna TPE focused architecture-v2 search",
+        "algorithm": "Optuna TPE focused architecture-v3 search",
         "multivariate": True,
         "baseline_case": f"C{FIRST_CASE_NUMBER:03d}",
         "baseline_is_exact_base_config": True,
@@ -465,6 +448,7 @@ def _write_search_metadata(
         "objective_description": OBJECTIVE_DESCRIPTION if objective_mode == "robust" else "mean(score)",
         "C001_reserved_for_default": True,
         "architecture_v2_enabled": base_config.architecture_v2_enabled,
+        "architecture_v3_enabled": base_config.architecture_v3_enabled,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
     }
     (results_root / "hpo_config.json").write_text(
@@ -474,15 +458,18 @@ def _write_search_metadata(
 
 
 def validate_focused_base_config(base_config: PolicyConfig) -> None:
-    """Fail fast if the focused study is accidentally started from v1/C001."""
+    """Fail fast if the v3 study is accidentally started from v1/v2/default."""
     base_config.validate()
-    if not base_config.architecture_v2_enabled:
+    if not base_config.architecture_v2_enabled or not base_config.architecture_v3_enabled:
         raise ValueError(
-            "Focused HPO requires architecture_v2_enabled=true. "
-            "Use the bundled config/C167_v2_hpo_base.json or an equivalent v2 config."
+            "Focused HPO requires architecture_v2_enabled=true and architecture_v3_enabled=true. "
+            "Use config/C376_v3_hpo_base.json or an equivalent validated v3 config."
         )
     if not base_config.planner_enabled:
         raise ValueError("Focused HPO requires planner_enabled=true")
+    # Latency-sensitive structural parameters are deliberately fixed for this study.
+    if base_config.planner_beam_width != 1 or base_config.planner_horizon_steps != 3:
+        raise ValueError("First v3 HPO expects planner_beam_width=1 and planner_horizon_steps=3")
     for name, spec in SEARCH_SPACE.items():
         value = getattr(base_config, name)
         if not (spec.low <= value <= spec.high):
@@ -491,9 +478,8 @@ def validate_focused_base_config(base_config: PolicyConfig) -> None:
                 f"[{spec.low}, {spec.high}]"
             )
 
-
 def _enqueue_base_candidate_if_needed(study: optuna.Study, base_config: PolicyConfig) -> None:
-    """Make C192 the exact C167-v2 baseline on the new common seed set."""
+    """Make C402 the exact C376-v3 baseline on the new common seed set."""
     if study.trials:
         return
     params = {name: getattr(base_config, name) for name in SEARCH_SPACE}
@@ -533,6 +519,7 @@ def run_hpo(
         previous = json.loads(existing_hpo_config.read_text(encoding="utf-8"))
         checks = {
             "architecture_v2_enabled": base_config.architecture_v2_enabled,
+        "architecture_v3_enabled": base_config.architecture_v3_enabled,
             "base_seed": base_seed,
             "n_cores_per_case": n_cores,
             "objective_mode": objective_mode,
@@ -556,10 +543,10 @@ def run_hpo(
         previous_base = PolicyConfig.from_json(existing_base_config)
         if previous_base.stable_hash != base_config.stable_hash:
             raise RuntimeError(
-                "Focused HPO base config differs from the persisted C167-v2 baseline. "
+                "Focused HPO base config differs from the persisted C376-v3 baseline. "
                 "Use the original base config or a fresh results directory."
             )
-    storage_path = results_root / "hpo_v2_focused_study.db"
+    storage_path = results_root / "hpo_v3_focused_study.db"
     if reset_study and storage_path.exists():
         storage_path.unlink()
 
@@ -719,7 +706,7 @@ def run_hpo(
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Run focused architecture-v2 Optuna/TPE HPO around the selected C167 baseline. Each candidate "
+            "Run focused architecture-v3 Optuna/TPE HPO around the selected C376 baseline. Each candidate "
             "is evaluated by evaluate.run_parallel() on the same deterministic seed batch."
         )
     )
@@ -728,7 +715,7 @@ def main() -> None:
         "--base-config",
         type=Path,
         default=DEFAULT_BASE_CONFIG_PATH,
-        help="Base/fixed configuration. Defaults to holdout-selected C167-v2.",
+        help="Base/fixed configuration. Defaults to selected C376-v3.",
     )
     parser.add_argument("--base-seed", type=int, default=DEFAULT_BASE_SEED)
     parser.add_argument("--n-cores", type=int, default=DEFAULT_N_CORES)
@@ -747,7 +734,7 @@ def main() -> None:
     if not args.base_config.exists():
         raise FileNotFoundError(
             f"Base config not found: {args.base_config}. "
-            "Provide --base-config pointing to the selected C167-v2 config."
+            "Provide --base-config pointing to config/C376_v3_hpo_base.json or another validated v3 config."
         )
     base_config = PolicyConfig.from_json(args.base_config)
 

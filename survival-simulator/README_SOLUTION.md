@@ -190,150 +190,137 @@ the verified public simulator mechanics. Those compatibility files are deliberat
 For authoritative pre-submission verification, run the evaluator inside a fresh official repository checkout. Parallel
 execution changes only evaluation orchestration; it does not alter the production controller or API behavior.
 
-## Focused architecture-v2 HPO: C167-v2 baseline + 99 TPE candidates
+## Architecture v3: C376 baseline + latency-bounded rollout planner
 
-The original 190-trial v1 study is now treated as **historical evidence**, not restarted. C167 was selected on unseen
-seeds, and the architecture-v2 comparison showed a large improvement over C167-v1. The new `hpo.py` therefore performs
-a focused search around **C167-v2** instead of reopening all 28 legacy parameters.
+C376 is now the selected v2 baseline. V3 is implemented incrementally on top of
+that controller; the hierarchy, memory, pseudo-fruit tracking, population
+coordination, API and evaluator remain intact.
 
-This is intentional: with a 100-candidate budget, searching 28 old dimensions plus every new v2 control would make TPE
-spend most of its budget relearning parameter regions that the first study already established.
+The main v3 changes are:
 
-### Search schedule and seed hygiene
+- true sequential horizon-3 rollout instead of multiplying one action to a terminal point;
+- candidate-specific predator closest-point-of-approach / TTC scoring;
+- cumulative simulator-aligned energy scoring across rollout steps;
+- full movement-segment wall intersection/clearance checks;
+- stable carrying-capacity smoothing plus population-level reproduction slots;
+- event-driven exploration-sector switching;
+- state-adaptive candidate action templates;
+- ETA/time-to-capture fruit ownership and travel cost.
 
-The focused study uses a fresh common seed set:
+See `ARCHITECTURE_V3_CHANGES.md` for the exact file/block map.
 
-```text
-70000, 70001, ..., 70029
-```
+### Compatibility
 
-These seeds are distinct from the original HPO (`1000..1029`), v1 candidate holdout (`50000..50029`), and v1-v2
-architecture comparison (`60000..60029`). Every focused-HPO candidate is evaluated on the same 30 seeds.
-
-Case numbering continues after the historical C002-C191 study:
-
-```text
-C192 = exact C167-v2 base configuration, reevaluated on 70000..70029
-C193..C291 = 99 focused TPE candidates
-```
-
-C192 is deliberately enqueued before sampling so the new study always contains an apples-to-apples baseline on its own
-training seeds.
-
-The scalar objective remains:
+The old planner is preserved. To reproduce C376-v2 exactly, use:
 
 ```text
-objective = 0.8 * mean_score + 0.2 * p10_score
+config/C376_v2.json
 ```
 
-This keeps the optimization criterion consistent with the original model-selection procedure while still penalizing
-catastrophic tail failures.
+or set:
 
-### Parameters searched
+```json
+"architecture_v3_enabled": false
+```
 
-Only 17 parameters are reopened.
+The production `config/default_params.json` now contains C376 with v3 enabled.
 
-| Parameter | C167-v2 base | Focused range | Why it remains tunable |
-|---|---:|---:|---|
-| `emergency_predator_distance` | 39.11 | 33–45 | v2 TTC changes the close-range emergency boundary |
-| `predator_danger_distance` | 187.45 | 175–225 | old HPO pushed upward; it is the base v2 danger radius |
-| `predator_prediction_weight` | 0.960 | 0.80–1.15 | old upper-bound signal + predictive planner use |
-| `escape_persistence_ticks` | 10 | 9–18 | old HPO hit its upper bound; important for tail survival |
-| `evasion_sprint_fraction` | 0.805 | 0.75–0.95 | directly defines nominal v2 evasion speed |
-| `exploration_change_interval` | 68 | 55–100 integer | old upper-bound signal; v2 sector exploration makes persistence directly relevant |
-| `fruit_distance_penalty` | 0.01523 | 0.013–0.022 | strong old directional signal and still used in target selection |
-| `spawn_min_energy` | 201.89 | 180–225 | base of the new dynamic reproduction threshold |
-| `population_soft_cap` | 15 | 14–20 | base of the v2 adaptive carrying capacity |
-| `planner_horizon_steps` | 2 | 1–3 integer | controls candidate projection horizon |
-| `planner_angle_spread` | 0.42 | 0.28–0.60 | controls directional alternatives around the v1 proposal |
-| `planner_predator_weight` | 4.0 | 2.8–6.5 | main final-action safety weight |
-| `planner_food_weight` | 1.7 | 1.1–2.6 | safety/food tradeoff in final action selection |
-| `planner_energy_weight` | 0.55 | 0.30–0.90 | movement/turn-energy tradeoff |
-| `planner_wall_clearance` | 18 | 13–24 | hard predicted wall-clearance threshold |
-| `ttc_danger_ticks` | 22 | 14–34 | predictive danger urgency window |
-| `dynamic_population_bonus` | 6 | 3–10 integer | amount the adaptive carrying capacity may move from the base cap |
+### Controller latency
 
-Everything else is **fixed to the holdout-selected C167-v2 values**. Important examples deliberately fixed include old
-wall-force parameters, `max_turn_angle`, energy thresholds, general foraging/exploration speeds, fruit-attraction and
-persistence terms, herbivore-repulsion terms, reproduction cooldown/old-age logic, stuck recovery, fruit-track matching
-thresholds, and `planner_wall_soft_clearance`.
-
-Those fields are fixed for specific reasons: the first HPO already converged them sufficiently, their v2 role is mostly
-superseded by another mechanism, or they are lower-level implementation tolerances that should not consume a 100-trial
-search budget without evidence that they are limiting performance.
-
-The complete searched/fixed values and a rationale for every searched field are written to `hpo_search_space.json` when
-the study starts.
-
-### Base configuration
-
-The package includes:
+The v3 planner is intentionally bounded to horizon 3 and beam width 1. The
+framework supports wider beams, but the competition default prioritizes the API
+time budget. On the included 20-agent synthetic stress benchmark, controller-only
+latency was:
 
 ```text
-config/C167_v2_hpo_base.json
+v2_us_per_agent=139.61
+v3_us_per_agent=204.30
+overhead_percent=46.33
 ```
 
-This is the exact holdout-selected C167 parameter vector with `architecture_v2_enabled=true`. The focused HPO refuses to
-start from a v1 configuration or with the planner disabled.
+Run the benchmark on the deployment machine:
 
-### Install HPO dependency
+```bash
+python benchmark_v3_latency.py \
+  --config config/C376_v3_hpo_base.json \
+  --ticks 500 --agents 20 --repeats 5
+```
+
+The script exits non-zero if measured overhead exceeds 60%.
+
+### Focused v3 HPO
+
+Do not reopen all historical controller parameters. The v1/v2 studies already
+converged many of them, and v3 changes only a subset of semantics. The new
+`hpo.py` therefore freezes the C376 values for converged parameters and searches
+17 parameters related to CPA/TTC, rollout scoring, wall-path clearance,
+population smoothing/reproduction, and event-driven exploration.
+
+The latency-sensitive structural values are fixed during this first v3 HPO:
+
+```text
+planner_horizon_steps = 3
+planner_beam_width = 1
+```
+
+The new candidate numbering continues after the previous C202-C401 study:
+
+```text
+C402        exact C376-v3 baseline on the new HPO seed batch
+C403-C501   focused v3 TPE candidates
+```
+
+The default common seed set is fresh:
+
+```text
+90000, 90001, ..., 90029
+```
+
+All candidates see exactly the same 30 seeds.
+
+Install HPO dependencies if needed:
 
 ```bash
 python -m pip install -r requirements-hpo.txt
 ```
 
-### Run the 100-case focused search on 30 cores
-
-From the official `survival-simulator/` directory:
+Run the focused v3 study on 30 cores:
 
 ```bash
 python hpo.py \
-  --base-config config/C167_v2_hpo_base.json \
-  --results-root results_v2_hpo \
+  --base-config config/C376_v3_hpo_base.json \
+  --results-root results_v3_hpo \
   --n-trials 100 \
   --n-cores 30 \
-  --base-seed 70000
+  --base-seed 90000
 ```
 
-The default arguments already match this command, so `python hpo.py` is sufficient if the bundled paths are unchanged.
-
-The output is:
+The robust objective remains:
 
 ```text
-results_v2_hpo/
-├── C192/                         # exact C167-v2 baseline on new HPO seeds
-├── C193/
+0.8 * mean(score) + 0.2 * p10(score)
+```
+
+The study writes:
+
+```text
+results_v3_hpo/
+├── C402/
+├── C403/
 ├── ...
-├── C291/
-├── hpo_v2_focused_study.db       # persistent Optuna study
-├── hpo_base_config.json          # exact frozen baseline
-├── hpo_config.json               # seed/objective/study settings
-├── hpo_search_space.json         # searched + fixed parameters and rationale
-├── hpo_trials.csv                # one row per candidate
-├── hpo_summary.json              # progress + current best
-└── best_params.json              # current best complete PolicyConfig
+├── C501/
+├── hpo_v3_focused_study.db
+├── hpo_base_config.json
+├── hpo_config.json
+├── hpo_search_space.json
+├── hpo_trials.csv
+├── hpo_summary.json
+└── best_params.json
 ```
 
-At the HPO level candidates are still evaluated sequentially. Inside each candidate, `evaluate.run_parallel()` launches
-30 independent simulator episodes concurrently, one per core. Thus 100 cases correspond to 3,000 simulator episodes but
-never to 100 simultaneous Optuna candidates.
-
-### Resume safety
-
-The study remains resumable after interruption. In addition to the existing Optuna SQLite state, focused HPO now refuses
-to resume if the base seed, number of per-candidate seeds/cores, objective, base C167-v2 config, or search-space definition
-has changed. This prevents silently mixing incomparable trials in one study.
-
-### After focused HPO
-
-Do **not** choose the final competition configuration only from `70000..70029`; those seeds are now optimization data.
-Shortlist the best few C192-C291 candidates and evaluate them on another untouched common seed set, e.g.:
-
-```text
-80000..80029
-```
-
-Use `validate_holdout.py` for that final comparison, exactly as for the earlier C167 selection.
+Do not choose the final competition model solely on `90000..90029`. Shortlist a
+few candidates and validate them on another untouched common seed batch with
+`validate_holdout.py`.
 
 ## Holdout selection of the best original HPO candidate
 

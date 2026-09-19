@@ -80,6 +80,26 @@ class PolicyConfig:
     fruit_track_match_distance: float = 48.0
     dynamic_population_bonus: int = 6
 
+    # Architecture v3: bounded true rollout planner. V2 remains available by
+    # setting this gate false, so C376-v2 can still be reproduced exactly.
+    architecture_v3_enabled: bool = False
+    planner_beam_width: int = 1
+    planner_rollout_discount: float = 0.88
+    planner_followup_angle_spread: float = 0.20
+    planner_cpa_weight: float = 1.15
+    planner_energy_score_scale: float = 0.85
+    planner_path_wall_soft_clearance: float = 30.0
+
+    # Stable-population coordination. Only a small adaptive capacity correction
+    # is retained; spawn slots avoid synchronized reproduction bursts.
+    reproduction_slots_per_tick: int = 1
+    population_capacity_smoothing: float = 0.22
+
+    # Event-driven exploration. The old interval becomes a long safety fallback
+    # rather than the primary direction-change trigger.
+    exploration_no_food_ticks: int = 85
+    exploration_stale_fallback_ticks: int = 180
+
     @property
     def predator_memory_ticks(self) -> int:
         return self.escape_persistence_ticks + 2
@@ -139,6 +159,16 @@ class PolicyConfig:
             "fruit_track_match_angle": self.fruit_track_match_angle,
             "fruit_track_match_distance": self.fruit_track_match_distance,
             "dynamic_population_bonus": self.dynamic_population_bonus,
+            "planner_beam_width": self.planner_beam_width,
+            "planner_rollout_discount": self.planner_rollout_discount,
+            "planner_followup_angle_spread": self.planner_followup_angle_spread,
+            "planner_cpa_weight": self.planner_cpa_weight,
+            "planner_energy_score_scale": self.planner_energy_score_scale,
+            "planner_path_wall_soft_clearance": self.planner_path_wall_soft_clearance,
+            "reproduction_slots_per_tick": self.reproduction_slots_per_tick,
+            "population_capacity_smoothing": self.population_capacity_smoothing,
+            "exploration_no_food_ticks": self.exploration_no_food_ticks,
+            "exploration_stale_fallback_ticks": self.exploration_stale_fallback_ticks,
         }
         for name, value in positive.items():
             if value <= 0:
@@ -156,10 +186,16 @@ class PolicyConfig:
                 raise ValueError(f"{name} must be in [0,1], got {value}")
         if self.critical_energy_ratio >= self.low_energy_ratio:
             raise ValueError("critical_energy_ratio must be < low_energy_ratio")
+        if not 0.0 < self.planner_rollout_discount <= 1.0:
+            raise ValueError("planner_rollout_discount must be in (0,1]")
+        if not 0.0 < self.population_capacity_smoothing <= 1.0:
+            raise ValueError("population_capacity_smoothing must be in (0,1]")
         for name in (
             "escape_persistence_ticks", "target_timeout_ticks", "exploration_change_interval",
             "population_soft_cap", "reproduction_cooldown_ticks", "stuck_tick_threshold",
             "recovery_ticks", "planner_horizon_steps", "fruit_track_ttl", "dynamic_population_bonus",
+            "planner_beam_width", "reproduction_slots_per_tick", "exploration_no_food_ticks",
+            "exploration_stale_fallback_ticks",
         ):
             if int(getattr(self, name)) <= 0:
                 raise ValueError(f"{name} must be a positive integer")

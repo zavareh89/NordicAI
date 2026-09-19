@@ -1,6 +1,6 @@
 {
   "architecture_v2_enabled": true,
-  "architecture_v3_enabled": true,
+  "architecture_v3_enabled": false,
   "conserve_move_fraction": 0.2077426798422198,
   "critical_energy_ratio": 0.2263605034960362,
   "dynamic_population_bonus": 3,
