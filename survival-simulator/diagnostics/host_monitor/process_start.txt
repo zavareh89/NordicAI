@@ -1,0 +1,2 @@
+    PID    PPID PSR %CPU %MEM   RSS    VSZ     ELAPSED CMD
+1524138 1524137   4  0.5  0.0 49196 133440       11:34 .venv/bin/python -m uvicorn diagnostic_agent_server:app --host 0.0.0.0 --port 9052 --workers 1 --no-access-log --log-level warning

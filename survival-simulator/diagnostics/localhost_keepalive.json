@@ -1,0 +1,18 @@
+{
+  "failures": 0,
+  "keep_alive": true,
+  "max_ms": 2.475259,
+  "mean_ms": 1.2344275995,
+  "method": "GET",
+  "min_ms": 0.715405,
+  "p50_ms": 1.289614,
+  "p90_ms": 1.333348,
+  "p95_ms": 1.359744,
+  "p99_ms": 1.449193,
+  "requests_measured": 2000,
+  "statuses": {
+    "200": 2050
+  },
+  "url": "http://127.0.0.1:9052/diag/ping",
+  "warmup": 50
+}
