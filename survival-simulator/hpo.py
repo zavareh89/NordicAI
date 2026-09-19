@@ -15,13 +15,34 @@ from optuna.trial import TrialState
 from survival_policy.config import PolicyConfig, load_default_config
 
 
-TOTAL_HPO_CASES = 200
+TOTAL_HPO_CASES = 100
 FIRST_CASE_NUMBER = 2
 DEFAULT_N_CORES = 30
 DEFAULT_BASE_SEED = 1000
 DEFAULT_SAMPLER_SEED = 20260918
-DEFAULT_STARTUP_TRIALS = 30
-DEFAULT_STUDY_NAME = "survival_tpe_200"
+DEFAULT_STARTUP_TRIALS = 20
+DEFAULT_STUDY_NAME = "survival_tpe_100"
+
+# Architecture-v2 parameters are intentionally held fixed during the original
+# 28-D HPO study. This preserves comparability with C002+ and prevents the
+# search space from exploding before the new planner has been holdout-tested.
+HPO_FIXED_FIELDS = {
+    "master_seed",
+    "architecture_v2_enabled",
+    "planner_enabled",
+    "planner_horizon_steps",
+    "planner_angle_spread",
+    "planner_predator_weight",
+    "planner_food_weight",
+    "planner_energy_weight",
+    "planner_wall_clearance",
+    "planner_wall_soft_clearance",
+    "ttc_danger_ticks",
+    "fruit_track_ttl",
+    "fruit_track_match_angle",
+    "fruit_track_match_distance",
+    "dynamic_population_bonus",
+}
 
 
 @dataclass(frozen=True)
@@ -41,7 +62,7 @@ class SearchRange:
 
 
 # This is deliberately a local search around the hand-engineered C001 defaults.
-# With only 200 candidate configurations and 28 tunable dimensions, very wide
+# With only 100 candidate configurations and the original 28 tunable dimensions, very wide
 # ranges would waste most of the budget on obviously poor behavior. The static
 # ranges also guarantee PolicyConfig constraints such as critical < low energy
 # and emergency predator distance < danger distance without conditional spaces.
@@ -411,7 +432,7 @@ def _write_search_metadata(
     startup_trials: int,
 ) -> None:
     search_payload = {
-        "fixed_parameters": {"master_seed": base_config.master_seed},
+        "fixed_parameters": {name: getattr(base_config, name) for name in sorted(HPO_FIXED_FIELDS)},
         "search_space": {name: spec.to_dict() for name, spec in SEARCH_SPACE.items()},
     }
     (results_root / "hpo_search_space.json").write_text(
@@ -432,6 +453,7 @@ def _write_search_metadata(
         "objective_mode": objective_mode,
         "objective_description": OBJECTIVE_DESCRIPTION if objective_mode == "robust" else "mean(score)",
         "C001_reserved_for_default": True,
+        "architecture_v2_enabled": base_config.architecture_v2_enabled,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
     }
     (results_root / "hpo_config.json").write_text(
@@ -463,6 +485,16 @@ def run_hpo(
         raise ValueError("objective_mode must be 'robust' or 'mean'")
 
     results_root.mkdir(parents=True, exist_ok=True)
+    existing_hpo_config = results_root / "hpo_config.json"
+    if existing_hpo_config.exists():
+        previous = json.loads(existing_hpo_config.read_text(encoding="utf-8"))
+        # Historical HPO runs predate architecture-v2 metadata, so missing means v1.
+        previous_v2 = bool(previous.get("architecture_v2_enabled", False))
+        if previous_v2 != base_config.architecture_v2_enabled:
+            raise RuntimeError(
+                "Refusing to mix v1 and architecture-v2 trials in the same HPO results root. "
+                "Use the matching base config to resume the old study or choose a fresh results directory."
+            )
     storage_path = results_root / "hpo_study.db"
     if reset_study and storage_path.exists():
         storage_path.unlink()

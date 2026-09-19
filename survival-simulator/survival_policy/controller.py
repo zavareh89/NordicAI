@@ -6,7 +6,13 @@ import random
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from .config import PolicyConfig
-from .coordination import local_competition_cost, local_density
+from .coordination import (
+    PopulationContext,
+    build_population_context,
+    local_competition_cost,
+    local_density,
+    local_fruit_owner,
+)
 from .geometry import (
     Vec2,
     add,
@@ -20,6 +26,7 @@ from .geometry import (
     wrap_angle,
 )
 from .memory import ActionMemory, AgentMemory, BehaviorState, PopulationMemory
+from .planner import MicroPlanner
 
 
 @dataclass(frozen=True)
@@ -52,6 +59,7 @@ class SurvivalController:
         config.validate()
         self.config = config
         self.memory = PopulationMemory()
+        self.planner = MicroPlanner(config)
 
     def reset(self) -> None:
         self.memory.reset()
@@ -93,10 +101,21 @@ class SurvivalController:
                 normalized.append(status.dict())
             else:
                 normalized.append(dict(status))
+
         active_ids = [int(s["agent_id"]) for s in normalized if "agent_id" in s]
         self.memory.cleanup(active_ids)
+        self.memory.update_population(active_ids)
         n_agents = int(data.get("n_agents", len(active_ids)) or len(active_ids))
-        decisions = [self._decide_agent(s, n_agents=n_agents) for s in normalized]
+        population_context = build_population_context(
+            normalized,
+            base_cap=self.config.population_soft_cap,
+            bonus_max=self.config.dynamic_population_bonus,
+            population_trend=self.memory.population_trend,
+        )
+        decisions = [
+            self._decide_agent(s, n_agents=n_agents, population_context=population_context)
+            for s in normalized
+        ]
         return [d.action_dict() for d in decisions]
 
     def _agent_rng(self, agent_id: int, epoch: int) -> random.Random:
@@ -107,9 +126,21 @@ class SurvivalController:
             return
         epoch = mem.tick // max(1, self.config.exploration_change_interval)
         rng = self._agent_rng(mem.agent_id, epoch)
-        # ID-stratified base phase + a small seeded offset prevents flocking.
-        phase = (mem.agent_id * 2.399963229728653) % (2.0 * math.pi)
-        jitter = rng.uniform(-0.65, 0.65)
+        if not self.config.architecture_v2_enabled:
+            phase = (mem.agent_id * 2.399963229728653) % (2.0 * math.pi)
+            jitter = rng.uniform(-0.65, 0.65)
+        else:
+            active_ids = self.memory.active_ids
+            if mem.agent_id in active_ids and active_ids:
+                rank = active_ids.index(mem.agent_id)
+                # Equal angular sectors reduce correlated exploration. A small
+                # deterministic rotation each epoch avoids permanently assigning an
+                # agent to the same corridor.
+                phase = 2.0 * math.pi * rank / len(active_ids)
+                phase += (epoch % max(1, len(active_ids))) * (math.pi / max(2, len(active_ids)))
+            else:
+                phase = (mem.agent_id * 2.399963229728653) % (2.0 * math.pi)
+            jitter = rng.uniform(-0.22, 0.22)
         mem.exploration_world_angle = wrap_angle(phase + jitter)
         mem.next_exploration_change_tick = mem.tick + self.config.exploration_change_interval
 
@@ -229,7 +260,22 @@ class SurvivalController:
             a = float(fruit.get("angle"))
         except (TypeError, ValueError):
             return -math.inf
+
         utility = -cfg.fruit_distance_penalty * d
+
+        # Stronger local assignment than v1: if another mutually visible
+        # herbivore has the clearly better claim, this fruit is heavily
+        # penalized rather than merely receiving a soft crowding penalty.
+        if cfg.architecture_v2_enabled:
+            owner = local_fruit_owner(
+                self_id=agent_id,
+                fruit_distance=d,
+                fruit_angle=a,
+                visible_agents=visible_agents,
+            )
+            if owner != agent_id:
+                utility -= 2.0 * cfg.fruit_competition_penalty
+
         utility -= local_competition_cost(
             self_id=agent_id,
             fruit_distance=d,
@@ -238,6 +284,7 @@ class SurvivalController:
             competition_radius=cfg.fruit_competition_radius,
             base_penalty=cfg.fruit_competition_penalty,
         )
+
         fx, fy = polar_to_cart(d, a)
         for pred in predators:
             try:
@@ -249,12 +296,17 @@ class SurvivalController:
             sep = max(1.0, math.hypot(fx - px, fy - py))
             if sep < cfg.predator_danger_distance:
                 utility -= 2.5 * (1.0 - sep / cfg.predator_danger_distance)
-        old_local = mem.current_target_local_bearing()
-        if old_local is not None and mem.target_distance is not None:
-            angle_match = abs(wrap_angle(a - old_local))
-            distance_match = abs(d - mem.target_distance)
-            if angle_match < 0.45 and distance_match < 65.0:
-                utility += cfg.target_persistence_bonus
+
+        track_id = fruit.get("_track_id")
+        if cfg.architecture_v2_enabled and track_id is not None and track_id == mem.target_track_id:
+            utility += cfg.target_persistence_bonus
+        else:
+            old_local = mem.current_target_local_bearing()
+            if old_local is not None and mem.target_distance is not None:
+                angle_match = abs(wrap_angle(a - old_local))
+                distance_match = abs(d - mem.target_distance)
+                if angle_match < 0.45 and distance_match < 65.0:
+                    utility += cfg.target_persistence_bonus if not cfg.architecture_v2_enabled else 0.5 * cfg.target_persistence_bonus
         return utility
 
     def _select_fruit(
@@ -280,6 +332,18 @@ class SurvivalController:
         ]
         scored.sort(key=lambda item: item[0], reverse=True)
         best_score, best = scored[0]
+
+        # Prefer an explicitly tracked target when it remains competitive.
+        if mem.target_track_id is not None:
+            tracked = [
+                (score, fruit) for score, fruit in scored
+                if fruit.get("_track_id") == mem.target_track_id
+            ]
+            if tracked:
+                old_score, old = max(tracked, key=lambda x: x[0])
+                if best_score < old_score + self.config.target_switch_margin:
+                    return old
+
         old_local = mem.current_target_local_bearing()
         if old_local is None or mem.target_distance is None:
             return best
@@ -296,6 +360,51 @@ class SurvivalController:
                 return old
         return best
 
+    def _dynamic_predator_distance(
+        self,
+        *,
+        mem: AgentMemory,
+        energy_ratio: float,
+        closest_edge_distance: float,
+    ) -> float:
+        cfg = self.config
+        if not cfg.architecture_v2_enabled:
+            return cfg.predator_danger_distance
+        ttc_urgency = 0.0
+        if math.isfinite(mem.predator_ttc_ticks):
+            ttc_urgency = max(0.0, 1.0 - mem.predator_ttc_ticks / cfg.ttc_danger_ticks)
+        low_energy = max(0.0, cfg.low_energy_ratio - energy_ratio) / max(cfg.low_energy_ratio, 1e-9)
+        wall_pressure = 0.0
+        if math.isfinite(closest_edge_distance):
+            wall_pressure = max(0.0, 1.0 - closest_edge_distance / max(2.0 * cfg.wall_danger_distance, 1.0))
+        multiplier = 1.0 + 0.28 * ttc_urgency + 0.10 * low_energy + 0.10 * wall_pressure
+        return cfg.predator_danger_distance * multiplier
+
+    def _dynamic_spawn_threshold(
+        self,
+        *,
+        context: PopulationContext,
+        visible_fruits: int,
+        nearest_predator_distance: float,
+        local_density_count: int,
+    ) -> float:
+        cfg = self.config
+        if not cfg.architecture_v2_enabled:
+            return cfg.spawn_min_energy
+        threshold = cfg.spawn_min_energy
+        # Food-rich/high-energy states can reproduce more aggressively.
+        threshold -= min(28.0, 8.0 * visible_fruits)
+        threshold -= max(0.0, context.average_energy_ratio - 0.55) * 35.0
+        if context.population_trend < -0.35:
+            threshold -= 12.0
+        # Density/danger raise the required reserve.
+        threshold += max(0, local_density_count - 2) * 5.0
+        if nearest_predator_distance < cfg.reproduction_danger_distance * 1.5:
+            threshold += 45.0
+        if context.n_agents >= context.carrying_capacity - 1:
+            threshold += 25.0
+        return max(105.0, threshold)
+
     def _state_for(
         self,
         *,
@@ -306,26 +415,41 @@ class SurvivalController:
         n_agents: int,
         fruits: Sequence[Mapping],
         nearest_predator_distance: float,
+        dynamic_predator_distance: float,
         closest_edge_distance: float,
+        carrying_capacity: int,
+        spawn_threshold: float,
     ) -> BehaviorState:
         cfg = self.config
         ratio = energy / max(max_energy, 1.0)
         if mem.tick <= mem.recovery_until_tick:
             return BehaviorState.RECOVERY
-        if nearest_predator_distance <= cfg.emergency_predator_distance:
+
+        emergency_distance = cfg.emergency_predator_distance
+        if cfg.architecture_v2_enabled and math.isfinite(mem.predator_ttc_ticks):
+            urgency = max(0.0, 1.0 - mem.predator_ttc_ticks / cfg.ttc_danger_ticks)
+            emergency_distance *= 1.0 + 0.20 * urgency
+        if nearest_predator_distance <= emergency_distance:
             mem.escape_until_tick = mem.tick + cfg.escape_persistence_ticks
             return BehaviorState.EMERGENCY_ESCAPE
-        if nearest_predator_distance <= cfg.predator_danger_distance or mem.tick <= mem.escape_until_tick:
+        if nearest_predator_distance <= dynamic_predator_distance or mem.tick <= mem.escape_until_tick:
             return BehaviorState.PREDATOR_EVASION
+
+        # Wall handling is now mostly a planner feasibility constraint. Keep only
+        # a truly critical wall state for cases where the agent is already close.
         if closest_edge_distance <= cfg.wall_critical_distance:
             return BehaviorState.WALL_AVOIDANCE
         if ratio <= cfg.critical_energy_ratio and fruits:
             return BehaviorState.CRITICAL_ENERGY_FORAGING
+
         can_spawn = (
             mem.tick >= mem.reproduction_cooldown_until
-            and n_agents < cfg.population_soft_cap
+            and n_agents < carrying_capacity
             and nearest_predator_distance > cfg.reproduction_danger_distance
-            and (energy >= cfg.spawn_min_energy or (age >= cfg.spawn_old_age and energy >= cfg.spawn_old_age_min_energy))
+            and (
+                energy >= spawn_threshold
+                or (age >= cfg.spawn_old_age and energy >= max(cfg.spawn_old_age_min_energy, spawn_threshold - 40.0))
+            )
         )
         if can_spawn:
             return BehaviorState.REPRODUCTION
@@ -335,28 +459,80 @@ class SurvivalController:
             return BehaviorState.ENERGY_CONSERVATION
         return BehaviorState.EXPLORATION
 
-    def _movement_distance(self, state: BehaviorState, status: Mapping, nearest_predator_distance: float) -> float:
+    def _movement_distance(
+        self,
+        state: BehaviorState,
+        status: Mapping,
+        nearest_predator_distance: float,
+        *,
+        chosen_fruit: Optional[Mapping],
+        mem: AgentMemory,
+    ) -> float:
         cfg = self.config
         speed = max(0.0, float(status.get("speed", 0.0) or 0.0))
         sprint = max(speed, float(status.get("sprint_speed", speed) or speed))
         energy = float(status.get("energy", 0.0) or 0.0)
         max_energy = max(1.0, float(status.get("max_energy", 1.0) or 1.0))
+        ratio = energy / max_energy
+
+        if not cfg.architecture_v2_enabled:
+            if state == BehaviorState.EMERGENCY_ESCAPE:
+                return sprint
+            if state == BehaviorState.PREDATOR_EVASION:
+                return sprint * cfg.evasion_sprint_fraction if energy >= max_energy * 0.22 else speed
+            if state in (BehaviorState.CRITICAL_ENERGY_FORAGING, BehaviorState.NORMAL_FORAGING):
+                return speed * cfg.forage_move_fraction
+            if state == BehaviorState.ENERGY_CONSERVATION:
+                return speed * cfg.conserve_move_fraction
+            if state == BehaviorState.RECOVERY:
+                return speed * 0.85
+            if state == BehaviorState.WALL_AVOIDANCE:
+                return speed * 0.60
+            if state == BehaviorState.REPRODUCTION:
+                return speed * 0.25
+            return speed * cfg.explore_move_fraction
+
         if state == BehaviorState.EMERGENCY_ESCAPE:
             return sprint
         if state == BehaviorState.PREDATOR_EVASION:
-            # Simulator itself prevents sprinting below 20% max energy.
-            return sprint * cfg.evasion_sprint_fraction if energy >= max_energy * 0.22 else speed
+            if energy < max_energy * 0.22:
+                return speed
+            urgency = 0.0
+            if math.isfinite(mem.predator_ttc_ticks):
+                urgency = max(0.0, 1.0 - mem.predator_ttc_ticks / cfg.ttc_danger_ticks)
+            fraction = min(1.0, cfg.evasion_sprint_fraction + 0.15 * urgency)
+            return sprint * fraction
         if state in (BehaviorState.CRITICAL_ENERGY_FORAGING, BehaviorState.NORMAL_FORAGING):
-            return speed * cfg.forage_move_fraction
+            fraction = cfg.forage_move_fraction
+            if state == BehaviorState.CRITICAL_ENERGY_FORAGING:
+                fraction = min(1.0, fraction + 0.08)
+            if chosen_fruit is not None:
+                try:
+                    d = float(chosen_fruit.get("distance"))
+                    # Slow down near food instead of overshooting it.
+                    if d < 2.0 * speed:
+                        fraction *= max(0.45, d / max(2.0 * speed, 1.0))
+                except (TypeError, ValueError):
+                    pass
+            if ratio < cfg.low_energy_ratio and state != BehaviorState.CRITICAL_ENERGY_FORAGING:
+                fraction *= 0.88
+            return speed * fraction
         if state == BehaviorState.ENERGY_CONSERVATION:
-            return speed * cfg.conserve_move_fraction
+            # Conservation becomes progressively stronger as energy falls.
+            scale_factor = max(0.55, ratio / max(cfg.low_energy_ratio, 1e-9))
+            return speed * cfg.conserve_move_fraction * scale_factor
         if state == BehaviorState.RECOVERY:
             return speed * 0.85
         if state == BehaviorState.WALL_AVOIDANCE:
-            return speed * 0.60
+            return speed * 0.55
         if state == BehaviorState.REPRODUCTION:
-            return speed * 0.25
-        return speed * cfg.explore_move_fraction
+            return speed * 0.20
+        # Exploration can be somewhat faster when the population is healthy and
+        # slows automatically near the low-energy boundary.
+        fraction = cfg.explore_move_fraction
+        if ratio < cfg.low_energy_ratio + 0.08:
+            fraction *= 0.82
+        return speed * fraction
 
     def _desired_vector(
         self,
@@ -375,6 +551,11 @@ class SurvivalController:
                 decay = 1.0 - age / max(1.0, float(cfg.predator_memory_ticks + 1))
                 pred = add(pred, scale(unit_from_angle(local_bearing + math.pi), cfg.predator_repulsion_weight * 0.45 * decay))
         wall = self.wall_repulsion(groups["Edge"])
+        # In architecture v2 walls are primarily handled as predicted-action
+        # constraints in MicroPlanner. Retain only a weak directional prior so
+        # the original controller remains a useful proposal/fallback.
+        if cfg.architecture_v2_enabled and cfg.planner_enabled:
+            wall = scale(wall, 0.22)
         herd = self.herbivore_repulsion(groups["Agent"])
 
         if state in (BehaviorState.EMERGENCY_ESCAPE, BehaviorState.PREDATOR_EVASION):
@@ -392,7 +573,7 @@ class SurvivalController:
 
         if state == BehaviorState.RECOVERY:
             sign = -1.0 if mem.agent_id % 2 else 1.0
-            recovery_angle = wrap_angle(mem.current_target_local_bearing() or 0.0 + sign * math.pi / 2.0)
+            recovery_angle = wrap_angle((mem.current_target_local_bearing() or 0.0) + sign * math.pi / 2.0)
             return normalize(add(unit_from_angle(recovery_angle), scale(wall, 1.5), herd), default=unit_from_angle(sign * math.pi / 2.0))
 
         self._ensure_exploration_heading(mem)
@@ -435,27 +616,63 @@ class SurvivalController:
             if mem.tick - mem.predator_last_seen_tick > self.config.predator_memory_ticks:
                 mem.predator_world_bearing = None
                 mem.predator_distance = None
+                mem.predator_closing_per_tick = 0.0
+                mem.predator_bearing_rate = 0.0
+                mem.predator_ttc_ticks = math.inf
             return
         try:
             local_angle = float(nearest_predator.get("angle"))
             distance = float(nearest_predator.get("distance"))
         except (TypeError, ValueError):
             return
-        mem.predator_world_bearing = wrap_angle(mem.heading_estimate + local_angle)
+
+        world_bearing = wrap_angle(mem.heading_estimate + local_angle)
+        if mem.predator_distance is not None and mem.predator_last_seen_tick == mem.tick - 1:
+            closing = mem.predator_distance - distance
+            bearing_rate = wrap_angle(world_bearing - (mem.predator_world_bearing or world_bearing))
+            # Light smoothing avoids reacting to one noisy observation.
+            mem.predator_closing_per_tick = 0.65 * mem.predator_closing_per_tick + 0.35 * closing
+            mem.predator_bearing_rate = 0.65 * mem.predator_bearing_rate + 0.35 * bearing_rate
+        else:
+            mem.predator_closing_per_tick = 0.0
+            mem.predator_bearing_rate = 0.0
+
+        if mem.predator_closing_per_tick > 0.10:
+            mem.predator_ttc_ticks = distance / mem.predator_closing_per_tick
+        else:
+            mem.predator_ttc_ticks = math.inf
+        mem.predator_world_bearing = world_bearing
         mem.predator_distance = distance
         mem.predator_last_seen_tick = mem.tick
 
-    def _decide_agent(self, status: Mapping, *, n_agents: int) -> Decision:
+    def _decide_agent(
+        self,
+        status: Mapping,
+        *,
+        n_agents: int,
+        population_context: PopulationContext,
+    ) -> Decision:
         cfg = self.config
         agent_id = int(status.get("agent_id"))
         energy = float(status.get("energy", 0.0) or 0.0)
         age = float(status.get("age", 0.0) or 0.0)
         max_energy = max(1.0, float(status.get("max_energy", 1.0) or 1.0))
+        energy_ratio = energy / max_energy
         mem = self.memory.get_or_create(agent_id)
         mem.begin_tick(energy, age)
 
         groups = self._split_observations(status.get("observations") or [])
+        if cfg.architecture_v2_enabled:
+            # Replace raw fruit observations with copies carrying persistent local
+            # pseudo-IDs. This affects only controller memory, never the API payload.
+            groups["Fruit"] = mem.update_fruit_tracks(
+                groups["Fruit"],
+                match_angle=cfg.fruit_track_match_angle,
+                match_distance=cfg.fruit_track_match_distance,
+                ttl=cfg.fruit_track_ttl,
+            )
         mem.local_population_density = local_density(groups["Agent"], cfg.herbivore_repulsion_radius * 1.5)
+
         nearest_predator = self._nearest_predator(groups["Predator"])
         nearest_predator_distance = math.inf
         if nearest_predator is not None:
@@ -480,6 +697,7 @@ class SurvivalController:
                     float(chosen_fruit.get("angle")),
                     float(chosen_fruit.get("distance")),
                     progress_epsilon=cfg.stuck_progress_epsilon,
+                    track_id=int(chosen_fruit.get("_track_id")) if chosen_fruit.get("_track_id") is not None else None,
                 )
             except (TypeError, ValueError):
                 pass
@@ -488,11 +706,21 @@ class SurvivalController:
             if mem.tick - mem.target_last_seen_tick > cfg.target_timeout_ticks:
                 mem.forget_target()
 
-        # Target progress based stuck detection. No absolute position is supplied by
-        # the challenge, so distance-to-persistent-target is the reliable signal.
         if mem.target_stall_ticks >= cfg.stuck_tick_threshold:
             mem.recovery_until_tick = mem.tick + cfg.recovery_ticks
             mem.forget_target()
+
+        dynamic_predator_distance = self._dynamic_predator_distance(
+            mem=mem,
+            energy_ratio=energy_ratio,
+            closest_edge_distance=closest_edge_distance,
+        )
+        spawn_threshold = self._dynamic_spawn_threshold(
+            context=population_context,
+            visible_fruits=len(groups["Fruit"]),
+            nearest_predator_distance=nearest_predator_distance,
+            local_density_count=mem.local_population_density,
+        )
 
         state = self._state_for(
             mem=mem,
@@ -502,14 +730,51 @@ class SurvivalController:
             n_agents=n_agents,
             fruits=groups["Fruit"],
             nearest_predator_distance=nearest_predator_distance,
+            dynamic_predator_distance=dynamic_predator_distance,
             closest_edge_distance=closest_edge_distance,
+            carrying_capacity=(population_context.carrying_capacity if cfg.architecture_v2_enabled else cfg.population_soft_cap),
+            spawn_threshold=spawn_threshold,
         )
         mem.set_state(state)
 
+        # V1 hierarchy/potential field remains the proposal generator.
         desired = self._desired_vector(state=state, mem=mem, chosen_fruit=chosen_fruit, groups=groups)
         move_angle = angle_from_vector(desired, default=0.0)
-        turn_angle = self._turn_angle(state=state, desired_move_angle=move_angle, nearest_predator=nearest_predator)
-        move_distance = self._movement_distance(state, status, nearest_predator_distance)
+        turn_angle = self._turn_angle(
+            state=state,
+            desired_move_angle=move_angle,
+            nearest_predator=nearest_predator,
+        )
+        move_distance = self._movement_distance(
+            state,
+            status,
+            nearest_predator_distance,
+            chosen_fruit=chosen_fruit,
+            mem=mem,
+        )
+
+        # Architecture v2: cheaply evaluate 20 nearby actions. Potential fields
+        # are no longer the final decision maker, but remain the prior/fallback.
+        if cfg.architecture_v2_enabled and cfg.planner_enabled and state != BehaviorState.REPRODUCTION:
+            normal_speed = max(0.0, float(status.get("speed", 0.0) or 0.0))
+            sprint_speed = max(normal_speed, float(status.get("sprint_speed", normal_speed) or normal_speed))
+            planned = self.planner.plan(
+                preferred_move_angle=move_angle,
+                base_turn_angle=turn_angle,
+                nominal_move_distance=move_distance,
+                normal_speed=normal_speed,
+                sprint_speed=sprint_speed,
+                state_name=state.value,
+                energy_ratio=energy_ratio,
+                chosen_fruit=chosen_fruit,
+                predators=groups["Predator"],
+                edges=groups["Edge"],
+                agents=groups["Agent"],
+                predator_ttc_ticks=mem.predator_ttc_ticks,
+            )
+            move_distance = planned.move_distance
+            move_angle = planned.move_direction
+            turn_angle = planned.turn_angle
 
         spawn = state == BehaviorState.REPRODUCTION
         if spawn:

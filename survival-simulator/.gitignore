@@ -1,2 +1,4 @@
 /results/*
+/results_holdout/*
+/results_architecture_test/*
 /.venv/*

@@ -45,6 +45,10 @@ def add(*vectors: Vec2) -> Vec2:
     return x, y
 
 
+def subtract(a: Vec2, b: Vec2) -> Vec2:
+    return a[0] - b[0], a[1] - b[1]
+
+
 def weighted_sum(components: Iterable[tuple[Vec2, float]]) -> Vec2:
     x = 0.0
     y = 0.0
@@ -59,7 +63,8 @@ def polar_to_cart(distance: float, angle: float) -> Vec2:
     return distance * ux, distance * uy
 
 
-def closest_point_on_segment_to_origin(a: Sequence[float], b: Sequence[float]) -> Vec2:
+def closest_point_on_segment(point: Sequence[float], a: Sequence[float], b: Sequence[float]) -> Vec2:
+    px, py = float(point[0]), float(point[1])
     ax, ay = float(a[0]), float(a[1])
     bx, by = float(b[0]), float(b[1])
     dx = bx - ax
@@ -67,14 +72,22 @@ def closest_point_on_segment_to_origin(a: Sequence[float], b: Sequence[float]) -
     denom = dx * dx + dy * dy
     if denom <= 1e-12:
         return ax, ay
-    t = -(ax * dx + ay * dy) / denom
+    t = ((px - ax) * dx + (py - ay) * dy) / denom
     t = max(0.0, min(1.0, t))
     return ax + t * dx, ay + t * dy
 
 
+def segment_distance_to_point(point: Sequence[float], a: Sequence[float], b: Sequence[float]) -> tuple[float, Vec2]:
+    closest = closest_point_on_segment(point, a, b)
+    return math.hypot(float(point[0]) - closest[0], float(point[1]) - closest[1]), closest
+
+
+def closest_point_on_segment_to_origin(a: Sequence[float], b: Sequence[float]) -> Vec2:
+    return closest_point_on_segment((0.0, 0.0), a, b)
+
+
 def segment_distance_to_origin(a: Sequence[float], b: Sequence[float]) -> tuple[float, Vec2]:
-    p = closest_point_on_segment_to_origin(a, b)
-    return norm(p), p
+    return segment_distance_to_point((0.0, 0.0), a, b)
 
 
 def stable_int_seed(master_seed: int, *values: int) -> int:

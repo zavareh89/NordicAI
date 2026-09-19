@@ -7,6 +7,7 @@ import pytest
 
 from hpo import (
     SEARCH_SPACE,
+    HPO_FIXED_FIELDS,
     case_id_for_trial_number,
     config_from_trial_params,
     objective_from_summary,
@@ -20,9 +21,9 @@ def test_case_names_reserve_c001_for_default():
     assert case_id_for_trial_number(99) == "C101"
 
 
-def test_search_space_covers_every_tunable_config_field_except_master_seed():
+def test_search_space_covers_original_tunable_fields_and_fixes_architecture_v2():
     config_fields = set(PolicyConfig.__dataclass_fields__)
-    assert set(SEARCH_SPACE) == config_fields - {"master_seed"}
+    assert set(SEARCH_SPACE) == config_fields - HPO_FIXED_FIELDS
 
 
 def test_fixed_trial_builds_valid_config_and_preserves_master_seed():
