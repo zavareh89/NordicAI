@@ -1,0 +1,111 @@
+experiment:
+  name: E2_rfdetr_small
+  seed: 42
+
+camera:
+  level: 0
+  requested_view: null
+
+data:
+  target_width: 960
+  target_height: 540
+  interpolation: INTER_AREA
+  split:
+    strategy: blocked_holdout
+    val_count: 5
+    purge_gap: 1
+    val_position: end
+    blocked_cv_splits: 5
+
+model:
+  family: rfdetr
+  variant: small
+  pretrained: true
+  pretrained_weights: rf-detr-small.pth
+  deployment_weights: weights/challenge/E2_rfdetr_small_best.pth
+  # RF-DETR Small 1.5.2: patch_size=16, num_windows=2. 960 is valid and also
+  # divisible by 64 for square_resize_div_64.
+  resolution: 960
+
+training:
+  epochs: 150
+  # In RF-DETR 1.5.2 the DataLoader batch is batch_size*grad_accum_steps, then
+  # it is split into grad_accum_steps micro-batches internally. These defaults
+  # therefore give an effective batch of 8 with GPU micro-batches of 2.
+  batch_size: 2
+  grad_accum_steps: 4
+  workers: 4
+  learning_rate: 0.00005
+  encoder_learning_rate: 0.000025
+  weight_decay: 0.0001
+  warmup_epochs: 1.0
+  lr_scheduler: cosine
+  lr_min_factor: 0.05
+  lr_drop: 140
+  lr_vit_layer_decay: 0.8
+  lr_component_decay: 0.7
+  drop_path: 0.0
+  use_ema: true
+  ema_decay: 0.993
+  ema_tau: 100
+  early_stopping: true
+  early_stopping_patience: 20
+  early_stopping_min_delta: 0.001
+  early_stopping_use_ema: true
+  clip_max_norm: 0.1
+  checkpoint_interval: 10
+  progress_bar: true
+  tensorboard: false
+  wandb: false
+  # The prepared baseline has train/valid only. RF-DETR 1.5.2 would require a
+  # test/ folder when run_test=true, so keep this false.
+  run_test: false
+  resume: null
+  select_best_by_map50: true
+  device: cuda
+
+augmentation:
+  # RF-DETR 1.5.2 uses its official AlbumentationsWrapper + aug_config.
+  square_resize_div_64: true
+  multi_scale: false
+  expanded_scales: false
+  do_random_resize_via_padding: false
+  # Disable the hard-wired 50/50 resize->crop->resize branch in RF-DETR 1.5.2;
+  # tiny/border objects should not be discarded in this 25-frame baseline.
+  disable_builtin_random_crop: true
+  hflip: 0.5
+  vflip: 0.5
+  brightness_contrast_probability: 0.25
+  brightness_limit: 0.10
+  contrast_limit: 0.10
+  color_jitter_probability: 0.15
+  saturation_jitter: 0.10
+  hue_jitter: 0.02
+  rotate_probability: 0.10
+  rotate_limit_degrees: 3.0
+  affine_probability: 0.15
+  scale: [0.90, 1.10]
+  translate_x: [-0.05, 0.05]
+  translate_y: [-0.05, 0.05]
+  gaussian_blur_probability: 0.03
+  gaussian_blur_sigma: [0.1, 0.8]
+  gaussian_noise_probability: 0.03
+  gaussian_noise_std_range: [0.005, 0.015]
+
+inference:
+  confidence_threshold: 0.08
+  class_thresholds: {}
+  max_detections: 200
+  nms_iou_threshold: 0.60
+  apply_extra_nms: false
+  device: cuda
+  warmup_iterations: 3
+
+paths:
+  challenge_scene: src/helsinki
+  prepared_root: prepared
+  yolo_dataset_yaml: prepared/yolo/data.yaml
+  rfdetr_dataset_root: prepared/rfdetr
+  pretrained_weights_dir: weights/pretrained
+  challenge_weights_dir: weights/challenge
+  experiments_root: experiments

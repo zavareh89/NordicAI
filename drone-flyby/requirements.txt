@@ -1,14 +1,22 @@
-# Lower bounds rather than exact pins, deliberately: you will almost certainly
-# be installing a detection stack (torch, ultralytics, ...) alongside these,
-# and hard pins here would fight it. Verified against the versions in brackets.
+--extra-index-url https://download.pytorch.org/whl/cu121
 
-fastapi>=0.115            # [0.141.1]
-uvicorn>=0.30             # [0.52.4]
-pydantic>=2.7,<3          # [2.13.4]
-numpy>=1.26               # [2.5.2]
-opencv-python>=4.9        # [5.0.0.93]
-requests>=2.31            # [2.34.2]
+torch==2.2.1+cu121
+torchvision==0.17.1+cu121
 
-# Only needed by local_evaluator.py. It is the same scorer the competition
-# uses, and the same version range.
-faster-coco-eval>=1.7.2,<2  # [1.7.2]
+# E1
+ultralytics==8.4.155
+
+# E2: this is the newest compatibility branch used here while retaining torch 2.2.1.
+rfdetr==1.5.2
+transformers==4.56.2
+albumentations==1.4.24
+
+numpy==1.26.4
+opencv-python==4.10.0.84
+PyYAML==6.0.2
+faster-coco-eval>=1.7.2,<2
+pydantic>=2.10,<3
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+requests>=2.32,<3
+pytest>=8.3,<9

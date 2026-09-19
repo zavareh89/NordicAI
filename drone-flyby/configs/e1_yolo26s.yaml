@@ -1,0 +1,82 @@
+experiment:
+  name: E1_yolo26s
+  seed: 42
+
+camera:
+  level: 0
+  requested_view: null
+
+data:
+  target_width: 960
+  target_height: 540
+  interpolation: INTER_AREA
+  split:
+    strategy: blocked_holdout
+    val_count: 5
+    purge_gap: 1
+    val_position: end
+    blocked_cv_splits: 5
+
+model:
+  family: yolo26
+  variant: s
+  pretrained: true
+  pretrained_weights: yolo26s.pt
+  # Published YOLO26 Objects365-stage checkpoint. Optional only; E1 defaults to standard COCO-stage yolo26s.pt.
+  objects365_weights: yolo26s-objv1-150.pt
+  deployment_weights: weights/challenge/E1_yolo26s_best.pt
+  imgsz: 960
+  rect_inference: true
+
+training:
+  epochs: 150
+  batch_size: 8
+  workers: 4
+  optimizer: AdamW
+  learning_rate: 0.001
+  weight_decay: 0.0005
+  early_stopping_patience: 30
+  checkpoint_interval: 10
+  deterministic: false
+  amp: true
+  device: 0
+
+augmentation:
+  fliplr: 0.5
+  flipud: 0.5
+  hsv_h: 0.005
+  hsv_s: 0.15
+  hsv_v: 0.15
+  degrees: 3.0
+  translate: 0.05
+  scale: [0.8, 1.2]
+  shear: 0.0
+  perspective: 0.0
+  mosaic: 0.25
+  close_mosaic: 10
+  mixup: 0.0
+  cutmix: 0.0
+  brightness_contrast_probability: 0.15
+  brightness_limit: 0.10
+  contrast_limit: 0.10
+  gaussian_blur_probability: 0.03
+  gaussian_noise_probability: 0.03
+  gaussian_noise_std_range: [0.005, 0.015]
+
+inference:
+  confidence_threshold: 0.08
+  class_thresholds: {}
+  max_detections: 200
+  nms_iou_threshold: 0.60
+  apply_extra_nms: false
+  device: 0
+  warmup_iterations: 3
+
+paths:
+  challenge_scene: src/helsinki
+  prepared_root: prepared
+  yolo_dataset_yaml: prepared/yolo/data.yaml
+  rfdetr_dataset_root: prepared/rfdetr
+  pretrained_weights_dir: weights/pretrained
+  challenge_weights_dir: weights/challenge
+  experiments_root: experiments
