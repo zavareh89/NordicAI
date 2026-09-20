@@ -1,0 +1,18 @@
+{
+  "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+  "max_candidates_per_question": 8,
+  "max_tasks_per_generation": 10,
+  "max_input_tokens": 8192,
+  "max_new_tokens": 128,
+
+  "min_nli_entailment": 0.30,
+  "min_topic_coverage": 0.0,
+  "max_baseline_score_drop": 0.45,
+
+  "require_no_strict_fact_contradiction": true,
+  "always_include_e1_choice": true,
+  "prefer_candidate_family_diversity": true,
+
+  "padding_before_s": 0.03,
+  "padding_after_s": 0.06
+}

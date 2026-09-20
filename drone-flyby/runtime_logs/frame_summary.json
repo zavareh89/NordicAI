@@ -1,15 +1,17 @@
 {
-  "updated_at_utc": "2026-09-19T21:16:03.518251+00:00",
+  "updated_at_utc": "2026-09-20T12:23:10.589373+00:00",
   "expected_frames": null,
   "first_expected_frame": 0,
   "slow_frame_budget_ms": 333.0,
-  "received_count": 247,
-  "successful_count": 247,
+  "received_count": 250,
+  "successful_count": 250,
   "failed_count": 0,
-  "completed_count": 247,
-  "duplicate_request_count": 1,
+  "completed_count": 250,
+  "duplicate_request_count": 486,
   "received_frames": [
+    0,
     1,
+    2,
     3,
     4,
     5,
@@ -85,6 +87,7 @@
     75,
     76,
     77,
+    78,
     79,
     80,
     81,
@@ -258,7 +261,9 @@
     249
   ],
   "successful_frames": [
+    0,
     1,
+    2,
     3,
     4,
     5,
@@ -334,6 +339,7 @@
     75,
     76,
     77,
+    78,
     79,
     80,
     81,
@@ -509,40 +515,36 @@
   "failed_frames": [],
   "pending_frames": [],
   "latest_received_frame": 249,
-  "skipped_before_latest_received": [
-    0,
-    2,
-    78
-  ],
+  "skipped_before_latest_received": [],
   "remaining_after_latest_received": [],
   "missing_expected_if_run_finished_now": [],
   "frames_over_budget_ms": [],
   "timing_ms": {
     "predict_total": {
-      "mean": 91.76030152621723,
-      "p50": 91.3954969983024,
-      "p95": 95.67444590175,
-      "max": 109.18400700029451
+      "mean": 107.70121010014554,
+      "p50": 95.78504999808501,
+      "p95": 148.34539819858037,
+      "max": 166.1627809953643
     },
     "inference": {
-      "mean": 49.327960157942975,
-      "p50": 49.683051998727024,
-      "p95": 51.71851459890604,
-      "max": 60.92384099974879
+      "mean": 61.60631407221081,
+      "p50": 52.06349150103051,
+      "p95": 94.27297224901847,
+      "max": 110.61402500490658
     },
     "interarrival": {
-      "mean": 397.6482742631642,
-      "p50": 332.68592699823785,
-      "p95": 464.5050068014825,
-      "max": 15907.584990000032
+      "mean": 234.61661865969654,
+      "p50": 262.06821049709106,
+      "p95": 383.8155836987424,
+      "max": 542.6021829916863
     },
     "http_total": {
-      "mean": 173.4822101128767,
-      "p50": 177.70786400069483,
-      "p95": 189.12178455029786,
-      "max": 256.9044180017954
+      "mean": 178.98567649872942,
+      "p50": 179.74762749872752,
+      "p95": 225.76879274492967,
+      "max": 355.48058699350804
     }
   },
-  "http_request_count": 248,
+  "http_request_count": 736,
   "http_error_count": 0
 }
