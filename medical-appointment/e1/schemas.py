@@ -58,6 +58,9 @@ class CandidateWindow:
     raw_score: float = 0.0
     retrieval_score: float = 0.0
     rank: int = 0
+    topic_overlap: float = 0.0
+    fuzzy_overlap: float = 0.0
+    fact_type_overlap: float = 0.0
 
     @property
     def key(self) -> tuple[str, int, int]:
@@ -66,6 +69,10 @@ class CandidateWindow:
     @property
     def center(self) -> float:
         return 0.5 * (self.start + self.end)
+
+    @property
+    def relevance(self) -> float:
+        return max(self.topic_overlap, self.fuzzy_overlap, self.fact_type_overlap)
 
 
 @dataclass(frozen=True)
@@ -101,8 +108,32 @@ class CandidateAssessment:
     no_score: float
 
 
+@dataclass(frozen=True)
+class EvidenceEvent:
+    """One spoken event represented by zero/one candidate from each ASR."""
+
+    medasr: CandidateAssessment | None
+    parakeet: CandidateAssessment | None
+    temporal_iou: float
+    center_distance_s: float
+
+    @property
+    def members(self) -> tuple[CandidateAssessment, ...]:
+        return tuple(
+            item
+            for item in (self.medasr, self.parakeet)
+            if item is not None
+        )
+
+    @property
+    def paired(self) -> bool:
+        return self.medasr is not None and self.parakeet is not None
+
+
 @dataclass
 class SourceVote:
+    # Retained for backward-compatible traces. E1 v2 makes the final decision
+    # from EvidenceEvent objects, not from global source votes.
     source: SourceName
     label: Literal["yes", "no", "neutral"]
     yes_score: float
@@ -117,8 +148,22 @@ class QuestionDecision:
     confidence: float
     candidate: CandidateAssessment | None
     reason: str
+    event: EvidenceEvent | None = None
     med_vote: SourceVote | None = None
     par_vote: SourceVote | None = None
+
+
+@dataclass(frozen=True)
+class EvidenceProposal:
+    source: SourceName
+    start_word: int
+    end_word: int  # inclusive
+    text: str
+    topic_coverage: float
+    exact_fact_fraction: float
+    has_strict_contradiction: bool
+    heuristic_score: float
+    parent: CandidateAssessment
 
 
 @dataclass(frozen=True)
@@ -145,5 +190,6 @@ class QuestionTrace:
     question: str
     candidates: dict[str, list[CandidateWindow]]
     assessments: list[CandidateAssessment]
+    events: list[EvidenceEvent]
     decision: QuestionDecision
     evidence: EvidenceSpan | None
