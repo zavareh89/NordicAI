@@ -34,13 +34,21 @@
   "evidence_max_words": 14,
   "evidence_context_words": 1,
   "evidence_max_proposals_per_source": 12,
-  "evidence_min_entailment": 0.48,
-  "evidence_entailment_weight": 0.6,
+  "evidence_min_entailment": 0.3,
+  "evidence_entailment_weight": 0.45,
   "evidence_fact_weight": 0.2,
   "evidence_topic_weight": 0.12,
-  "evidence_compactness_weight": 0.08,
-  "evidence_medasr_tie_bonus": 0.015,
+  "evidence_compactness_weight": 0.1,
+  "evidence_medasr_tie_bonus": 0.06,
   "evidence_padding_before_s": 0.03,
   "evidence_padding_after_s": 0.06,
-  "catastrophic_fallback_answer": true
+  "catastrophic_fallback_answer": true,
+  "evidence_kind_bias": {
+    "pause": 0.14,
+    "clause": -0.1,
+    "anchor": 0.06,
+    "fixed_short": -0.06,
+    "scan": 0.14,
+    "retrieval": -0.1
+  }
 }

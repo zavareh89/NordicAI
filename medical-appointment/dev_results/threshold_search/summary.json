@@ -1,0 +1,81 @@
+{
+  "base_metrics_full_training_set": {
+    "questions": 390,
+    "correct": 342,
+    "accuracy": 0.8769230769230769,
+    "mean_tiou": 0.3113038565287625,
+    "score": 0.5375515446864882,
+    "tp": 151,
+    "fn": 44,
+    "fp": 4,
+    "tn": 191,
+    "yes_precision": 0.9741935483870968,
+    "yes_recall": 0.7743589743589744,
+    "tiou_when_answered_yes": 0.40201491406032247,
+    "by_type": {
+      "positive": {
+        "correct": 151,
+        "total": 195,
+        "accuracy": 0.7743589743589744
+      },
+      "hard_negative": {
+        "correct": 138,
+        "total": 142,
+        "accuracy": 0.971830985915493
+      },
+      "off_topic": {
+        "correct": 53,
+        "total": 53,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "cv": {
+    "folds": 5,
+    "mean_score": 0.570261696801175,
+    "mean_accuracy": 0.9078571428571429,
+    "mean_tiou": 0.3451980660971964
+  },
+  "full_training_recommendation_metrics": {
+    "questions": 390,
+    "correct": 355,
+    "accuracy": 0.9102564102564102,
+    "mean_tiou": 0.34603546543687264,
+    "score": 0.5717238433646877,
+    "tp": 170,
+    "fn": 25,
+    "fp": 10,
+    "tn": 185,
+    "yes_precision": 0.9444444444444444,
+    "yes_recall": 0.8717948717948718,
+    "tiou_when_answered_yes": 0.39692303388347155,
+    "by_type": {
+      "positive": {
+        "correct": 170,
+        "total": 195,
+        "accuracy": 0.8717948717948718
+      },
+      "hard_negative": {
+        "correct": 133,
+        "total": 142,
+        "accuracy": 0.9366197183098591
+      },
+      "off_topic": {
+        "correct": 52,
+        "total": 53,
+        "accuracy": 0.9811320754716981
+      }
+    }
+  },
+  "recommended_thresholds": {
+    "event_member_yes_floor": 0.16,
+    "dual_event_yes_threshold": 0.24,
+    "single_source_yes_threshold": 0.14,
+    "exact_fact_yes_threshold": 0.42,
+    "asr_fact_disagreement_yes_threshold": 0.64,
+    "generic_disagreement_yes_threshold": 0.68,
+    "strong_entailment_threshold": 0.66,
+    "event_yes_no_margin": 0.03
+  },
+  "important": "Use CV metrics to judge generalization. The full-data recommendation is the deployment candidate, not an unbiased estimate."
+}

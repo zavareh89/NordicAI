@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 import json
 from pathlib import Path
 from typing import Any
@@ -8,8 +8,7 @@ from typing import Any
 
 @dataclass
 class E1Config:
-    # Multi-scale retrieval. The larger window gives NLI enough context; the
-    # smaller window improves retrieval/evidence precision around short facts.
+    # Multi-scale retrieval.
     retrieval_window_words: int = 32
     retrieval_secondary_window_words: int = 16
     retrieval_stride_words: int = 8
@@ -36,8 +35,7 @@ class E1Config:
     fact_match_entailment_bonus: float = 0.08
     assessment_retrieval_floor: float = 0.78
 
-    # Event-level consensus. These are intentionally more recall-oriented than
-    # E1 v1 while exact numeric/value contradictions remain strict.
+    # Event-level consensus.
     event_member_yes_floor: float = 0.48
     dual_event_yes_threshold: float = 0.56
     single_source_yes_threshold: float = 0.62
@@ -51,20 +49,35 @@ class E1Config:
     minimum_relevance_for_yes: float = 0.10
     medasr_evidence_preference_tolerance: float = 0.05
 
-    # Compact evidence refinement. Only questions already classified YES enter
-    # this second, batched NLI pass.
+    # Evidence proposal generation. E1 v3 no longer assumes the shortest
+    # entailing phrase is annotation-like. It proposes compact, clause,
+    # pause-bounded and larger fixed-width alternatives and lets ranking choose.
     evidence_min_words: int = 3
-    evidence_max_words: int = 14
+    evidence_max_words: int = 32
     evidence_context_words: int = 1
-    evidence_max_proposals_per_source: int = 12
+    evidence_fixed_widths: list[int] = field(
+        default_factory=lambda: [5, 8, 12, 16, 24, 32]
+    )
+    evidence_pause_thresholds_s: list[float] = field(
+        default_factory=lambda: [0.30, 0.45, 0.60]
+    )
+    evidence_clause_max_words: int = 32
+    evidence_include_retrieval_window: bool = True
+    evidence_max_proposals_per_source: int = 40
+
+    # Evidence ranking.
     evidence_min_entailment: float = 0.48
     evidence_entailment_weight: float = 0.60
     evidence_fact_weight: float = 0.20
     evidence_topic_weight: float = 0.12
-    evidence_compactness_weight: float = 0.08
+    evidence_compactness_weight: float = 0.03
     evidence_medasr_tie_bonus: float = 0.015
     evidence_padding_before_s: float = 0.03
     evidence_padding_after_s: float = 0.06
+
+    # Step 5 adds optional kind biases. Keeping it here already makes configs
+    # forward-compatible; an empty mapping changes nothing.
+    evidence_kind_bias: dict[str, float] = field(default_factory=dict)
 
     # Robustness.
     catastrophic_fallback_answer: bool = True

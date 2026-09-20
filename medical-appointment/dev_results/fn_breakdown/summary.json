@@ -1,0 +1,15 @@
+{
+  "false_negatives": 25,
+  "counts": {
+    "retrieval_miss": 10,
+    "nli_or_semantic_support_weak": 13,
+    "wrong_event_ranking": 1,
+    "consensus_threshold_rejection": 1
+  },
+  "fractions": {
+    "retrieval_miss": 0.4,
+    "nli_or_semantic_support_weak": 0.52,
+    "wrong_event_ranking": 0.04,
+    "consensus_threshold_rejection": 0.04
+  }
+}

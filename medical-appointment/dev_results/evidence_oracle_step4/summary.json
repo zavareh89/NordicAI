@@ -1,0 +1,17 @@
+{
+  "positive_questions": 195,
+  "answered_yes": 170,
+  "mean_selected_tiou_over_all_positives": 0.38024745598266824,
+  "mean_selected_tiou_when_answered_yes": 0.4361661995095312,
+  "mean_selected_event_proposal_oracle_when_answered_yes": 0.6829255930477978,
+  "mean_gold_event_proposal_oracle": 0.7404092804349334,
+  "mean_all_proposal_oracle": 0.7404092804349334,
+  "oracle_at_least_0_50": 0.8358974358974359,
+  "oracle_at_least_0_70": 0.7538461538461538,
+  "oracle_at_least_0_85": 0.5692307692307692,
+  "interpretation": {
+    "large selected-event oracle minus selected": "ranking/scoring is the bottleneck",
+    "large all-proposal oracle minus selected-event oracle": "event selection is the bottleneck",
+    "low all-proposal oracle": "proposal generation/boundaries are the bottleneck"
+  }
+}

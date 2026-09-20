@@ -1,0 +1,35 @@
+{
+  "base_metrics": {
+    "positive_questions": 195.0,
+    "answered_yes_positive": 170.0,
+    "mean_tiou_all_positives": 0.38024745598266824,
+    "mean_tiou_answered_yes": 0.4361661995095312
+  },
+  "cv": {
+    "folds": 5,
+    "mean_tiou_all_positives": 0.40589878721108014,
+    "mean_tiou_answered_yes": 0.45983195840821445
+  },
+  "full_training_recommendation_metrics": {
+    "positive_questions": 195.0,
+    "answered_yes_positive": 170.0,
+    "mean_tiou_all_positives": 0.4420968577433067,
+    "mean_tiou_answered_yes": 0.5071111015290871
+  },
+  "recommended_evidence_parameters": {
+    "evidence_min_entailment": 0.3,
+    "evidence_entailment_weight": 0.45,
+    "evidence_fact_weight": 0.2,
+    "evidence_topic_weight": 0.12,
+    "evidence_compactness_weight": 0.1,
+    "evidence_medasr_tie_bonus": 0.06,
+    "kind:pause": 0.14,
+    "kind:clause": -0.1,
+    "kind:retrieval": -0.1,
+    "kind:anchor": 0.06,
+    "kind:fixed_short": -0.06,
+    "kind:fixed_long": 0.0,
+    "kind:scan": 0.14
+  },
+  "important": "Use CV improvement to decide whether the boundary tuner generalizes. The full-training configuration is the deployment candidate."
+}

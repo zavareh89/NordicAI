@@ -49,7 +49,7 @@ class FactComparison:
 class CandidateWindow:
     source: SourceName
     left: int
-    right: int  # exclusive global word index
+    right: int
     start: float
     end: float
     text: str
@@ -110,8 +110,6 @@ class CandidateAssessment:
 
 @dataclass(frozen=True)
 class EvidenceEvent:
-    """One spoken event represented by zero/one candidate from each ASR."""
-
     medasr: CandidateAssessment | None
     parakeet: CandidateAssessment | None
     temporal_iou: float
@@ -132,8 +130,6 @@ class EvidenceEvent:
 
 @dataclass
 class SourceVote:
-    # Retained for backward-compatible traces. E1 v2 makes the final decision
-    # from EvidenceEvent objects, not from global source votes.
     source: SourceName
     label: Literal["yes", "no", "neutral"]
     yes_score: float
@@ -157,20 +153,22 @@ class QuestionDecision:
 class EvidenceProposal:
     source: SourceName
     start_word: int
-    end_word: int  # inclusive
+    end_word: int
     text: str
     topic_coverage: float
     exact_fact_fraction: float
     has_strict_contradiction: bool
     heuristic_score: float
     parent: CandidateAssessment
+    kind: str = "compact"
+    pause_threshold_s: float | None = None
 
 
 @dataclass(frozen=True)
 class EvidenceSpan:
     source: SourceName
     start_word: int
-    end_word: int  # inclusive
+    end_word: int
     start: float
     end: float
 
