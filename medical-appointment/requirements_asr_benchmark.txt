@@ -1,0 +1,17 @@
+# Python 3.11 recommended.
+# Install the CUDA 12.1 PyTorch stack first:
+#   pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 \
+#       --index-url https://download.pytorch.org/whl/cu121
+# Then install this file.
+transformers==5.13.1
+huggingface-hub==1.5.0
+
+accelerate>=1.0,<2
+sentencepiece>=0.2,<1
+click>=8.1,<9
+
+numpy>=1.26,<3
+nvidia-ml-py>=12,<13
+pytest>=8,<9
+
+librosa==0.11.0

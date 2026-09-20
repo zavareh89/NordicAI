@@ -1,0 +1,10 @@
+{
+  "model": "parakeet_v3",
+  "model_id": "nvidia/parakeet-tdt-0.6b-v3",
+  "load_time_s": 8.64073324900528,
+  "load_peak_vram_mb": 1486.0,
+  "load_incremental_vram_mb": 269.375,
+  "cache_signature": "d955ac3675378c0a",
+  "warmup_time_s": 4.147040489995561,
+  "warmup_peak_vram_mb": 1838.0
+}

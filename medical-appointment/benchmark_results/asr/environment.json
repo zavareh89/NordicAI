@@ -1,0 +1,12 @@
+{
+  "python": "3.11.15",
+  "platform": "Linux-5.15.0-191-generic-x86_64-with-glibc2.35",
+  "ffmpeg": "/usr/bin/ffmpeg",
+  "torch": "2.5.1+cu121",
+  "torch_cuda": "12.1",
+  "cuda_available": true,
+  "gpu_name": "NVIDIA A10",
+  "transformers": "5.13.1",
+  "huggingface_hub": "1.5.0",
+  "numpy": "2.4.6"
+}

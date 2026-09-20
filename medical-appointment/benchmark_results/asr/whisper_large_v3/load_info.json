@@ -1,0 +1,10 @@
+{
+  "model": "whisper_large_v3",
+  "model_id": "openai/whisper-large-v3",
+  "load_time_s": 84.45320606099995,
+  "load_peak_vram_mb": 3488.0,
+  "load_incremental_vram_mb": 3180.0,
+  "cache_signature": "67410380dfd268f9",
+  "warmup_time_s": 23.908882212002936,
+  "warmup_peak_vram_mb": 10064.0
+}

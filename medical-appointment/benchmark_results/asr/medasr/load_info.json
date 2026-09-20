@@ -1,0 +1,10 @@
+{
+  "model": "medasr",
+  "model_id": "google/medasr",
+  "load_time_s": 3.173125360997801,
+  "load_peak_vram_mb": 716.0,
+  "load_incremental_vram_mb": 410.0,
+  "cache_signature": "bffdb39419e6b168",
+  "warmup_time_s": 0.26396761299838545,
+  "warmup_peak_vram_mb": 750.0
+}
