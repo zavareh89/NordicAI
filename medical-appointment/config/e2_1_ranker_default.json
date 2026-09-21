@@ -1,0 +1,6 @@
+{
+  "model_path": "config/e2_1_evidence_ranker.json",
+  "calibration_path": "config/e2_1_boundary_calibration.json",
+  "min_nli_entailment": 0.25,
+  "require_no_strict_fact_contradiction": true
+}

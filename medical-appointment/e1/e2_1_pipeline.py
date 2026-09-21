@@ -27,6 +27,96 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 
+def _temporal_iou(
+    a_start: float,
+    a_end: float,
+    b_start: float,
+    b_end: float,
+) -> float:
+    intersection = max(
+        0.0,
+        min(a_end, b_end) - max(a_start, b_start),
+    )
+    union = max(a_end, b_end) - min(a_start, b_start)
+    return intersection / union if union > 0.0 else 0.0
+
+
+def _span_center(span: EvidenceSpan) -> float:
+    return 0.5 * (float(span.start) + float(span.end))
+
+
+def _apply_iou_safety_guard(
+    baseline_span: EvidenceSpan,
+    llm_span: EvidenceSpan,
+) -> EvidenceSpan:
+    """Cheap evidence safety guard.
+
+    - Zero overlap with the original E1 span -> keep E1.
+    - Center moves >3s from E1 -> keep E1.
+    - Tiny overlap (<0.15) on the same ASR -> use the union.
+    - Otherwise keep the LLM span.
+    - Add ±0.35s padding to very short (<3s) final spans.
+    """
+
+    overlap = _temporal_iou(
+        llm_span.start,
+        llm_span.end,
+        baseline_span.start,
+        baseline_span.end,
+    )
+
+    center_gap = abs(
+        _span_center(llm_span)
+        - _span_center(baseline_span)
+    )
+
+    if overlap <= 0.0 or center_gap > 3.0:
+        chosen = baseline_span
+
+    elif (
+        overlap < 0.15
+        and llm_span.source == baseline_span.source
+    ):
+        chosen = EvidenceSpan(
+            source=baseline_span.source,
+            start_word=min(
+                baseline_span.start_word,
+                llm_span.start_word,
+            ),
+            end_word=max(
+                baseline_span.end_word,
+                llm_span.end_word,
+            ),
+            start=min(
+                baseline_span.start,
+                llm_span.start,
+            ),
+            end=max(
+                baseline_span.end,
+                llm_span.end,
+            ),
+        )
+
+    else:
+        chosen = llm_span
+
+    duration = float(chosen.end) - float(chosen.start)
+
+    if duration < 3.0:
+        chosen = EvidenceSpan(
+            source=chosen.source,
+            start_word=chosen.start_word,
+            end_word=chosen.end_word,
+            start=max(
+                0.0,
+                float(chosen.start) - 0.35,
+            ),
+            end=float(chosen.end) + 0.35,
+        )
+
+    return chosen
+
+
 class DualASRE2_1Pipeline(DualASRE1Pipeline):
     """E2.1 = frozen E1 classification + selective local-LLM evidence reranking.
 
@@ -78,12 +168,8 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
         device: str = "cuda",
     ) -> "DualASRE2_1Pipeline":
         return cls(
-            config=E1Config.from_json(
-                e1_path
-            ),
-            e2_config=E2_1Config.from_json(
-                e2_path
-            ),
+            config=E1Config.from_json(e1_path),
+            e2_config=E2_1Config.from_json(e2_path),
             device=device,
         )
 
@@ -94,10 +180,7 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
     ) -> list[NLIResult]:
         try:
             results = self.nli.predict(
-                [
-                    proposal.text
-                    for proposal in proposals
-                ],
+                [proposal.text for proposal in proposals],
                 proposal_questions,
             )
 
@@ -120,10 +203,8 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                         min(
                             0.95,
                             0.35
-                            + 0.35
-                            * proposal.topic_coverage
-                            + 0.25
-                            * proposal.exact_fact_fraction,
+                            + 0.35 * proposal.topic_coverage
+                            + 0.25 * proposal.exact_fact_fraction,
                         ),
                     ),
                     neutral=0.55,
@@ -143,10 +224,7 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
         local_nli: list[NLIResult],
         transcripts: dict[str, TranscriptView],
     ) -> EvidenceSpan | None:
-        if (
-            not decision.answer
-            or decision.candidate is None
-        ):
+        if not decision.answer or decision.candidate is None:
             return None
 
         if local_proposals:
@@ -163,9 +241,7 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                     "using deterministic E1 fallback"
                 )
 
-        source = (
-            decision.candidate.candidate.source
-        )
+        source = decision.candidate.candidate.source
 
         return fallback_evidence(
             decision.candidate,
@@ -179,8 +255,6 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
         decisions: list[QuestionDecision],
         transcripts: dict[str, TranscriptView],
     ) -> list[EvidenceSpan | None]:
-        """Run the normal E1 evidence stage, then rerank only E1 YES spans."""
-
         (
             proposals,
             proposal_questions,
@@ -212,16 +286,11 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
             proposal_questions,
         )
 
-        baseline_evidence: list[
-            EvidenceSpan | None
-        ] = []
+        baseline_evidence: list[EvidenceSpan | None] = []
 
         rerank_tasks: list[RerankTask] = []
         task_to_question: dict[int, int] = {}
-        task_candidates: dict[
-            int,
-            tuple[Any, ...],
-        ] = {}
+        task_candidates: dict[int, tuple[Any, ...]] = {}
 
         next_task_id = 0
 
@@ -236,12 +305,8 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                 ranges,
             )
         ):
-            local_proposals = proposals[
-                start:end
-            ]
-            local_nli = proposal_nli[
-                start:end
-            ]
+            local_proposals = proposals[start:end]
+            local_nli = proposal_nli[start:end]
 
             e1_span = self._baseline_e1_evidence(
                 decision,
@@ -249,9 +314,7 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                 local_nli,
                 transcripts,
             )
-            baseline_evidence.append(
-                e1_span
-            )
+            baseline_evidence.append(e1_span)
 
             if (
                 not decision.answer
@@ -269,8 +332,6 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                 e2_config=self.e2_config,
             )
 
-            # One candidate means there is nothing meaningful for an LLM to
-            # rerank; preserve E1 directly.
             if len(candidates) < 2:
                 continue
 
@@ -281,23 +342,16 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
                     candidates=candidates,
                 )
             )
-            task_to_question[
-                next_task_id
-            ] = question_index
-            task_candidates[
-                next_task_id
-            ] = candidates
-
+            task_to_question[next_task_id] = question_index
+            task_candidates[next_task_id] = candidates
             next_task_id += 1
 
         if not rerank_tasks:
             return baseline_evidence
 
         try:
-            selections = (
-                self.llm_reranker.rank(
-                    rerank_tasks
-                )
+            selections = self.llm_reranker.rank(
+                rerank_tasks
             )
         except Exception:
             logger.exception(
@@ -305,14 +359,10 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
             )
             return baseline_evidence
 
-        final_evidence = list(
-            baseline_evidence
-        )
+        final_evidence = list(baseline_evidence)
 
         for task in rerank_tasks:
-            selected_id = selections.get(
-                task.task_id
-            )
+            selected_id = selections.get(task.task_id)
 
             if selected_id is None:
                 continue
@@ -320,12 +370,8 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
             selected = next(
                 (
                     candidate
-                    for candidate
-                    in task_candidates[
-                        task.task_id
-                    ]
-                    if candidate.candidate_id
-                    == selected_id
+                    for candidate in task_candidates[task.task_id]
+                    if candidate.candidate_id == selected_id
                 ),
                 None,
             )
@@ -333,28 +379,30 @@ class DualASRE2_1Pipeline(DualASRE1Pipeline):
             if selected is None:
                 continue
 
-            # Final deterministic safety check. The LLM cannot override exact
-            # fact contradictions even if parser/model behavior is unexpected.
             if (
                 self.e2_config.require_no_strict_fact_contradiction
                 and selected.proposal.has_strict_contradiction
             ):
                 continue
 
-            question_index = (
-                task_to_question[
-                    task.task_id
-                ]
-            )
+            question_index = task_to_question[task.task_id]
+            baseline_span = baseline_evidence[question_index]
 
             try:
-                final_evidence[
-                    question_index
-                ] = proposal_to_evidence_span(
+                llm_span = proposal_to_evidence_span(
                     selected.proposal,
                     transcripts,
                     self.e2_config,
                 )
+
+                if baseline_span is not None:
+                    llm_span = _apply_iou_safety_guard(
+                        baseline_span,
+                        llm_span,
+                    )
+
+                final_evidence[question_index] = llm_span
+
             except Exception:
                 logger.exception(
                     "E2.1 selected span could not be materialized; "

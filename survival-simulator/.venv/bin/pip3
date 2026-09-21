@@ -1,4 +1,4 @@
-#!/home/ubuntu/nordicai/survival-simulator/.venv/bin/python
+#!/data/nordicai/survival-simulator/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

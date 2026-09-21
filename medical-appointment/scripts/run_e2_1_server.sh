@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+python -m unittest \
+  tests/test_e2_1b_word_evidence.py \
+  tests/test_e2_1b_pipeline_mock.py#!/usr/bin/env bash
 set -euo pipefail
 
 # Keep your final/tuned E1 config. E2.1 adds only evidence reranking.

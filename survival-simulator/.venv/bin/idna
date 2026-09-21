@@ -1,4 +1,4 @@
-#!/home/ubuntu/nordicai/survival-simulator/.venv/bin/python
+#!/data/nordicai/survival-simulator/.venv/bin/python
 import sys
 from idna.cli import main
 if __name__ == '__main__':

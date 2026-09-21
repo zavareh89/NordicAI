@@ -1,0 +1,9 @@
+{
+  "ranker_model_path": "config/e2_1_evidence_ranker.json",
+  "calibration_path": "config/e2_1_boundary_calibration.json",
+  "ranker_min_nli_entailment": 0.25,
+  "agreement_tiou_threshold": 0.30,
+  "minimum_llm_entailment": 0.45,
+  "llm_entailment_advantage": 0.08,
+  "require_no_strict_fact_contradiction": true
+}

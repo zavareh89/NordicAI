@@ -20,7 +20,7 @@
   "assessment_retrieval_floor": 0.78,
   "event_member_yes_floor": 0.16,
   "dual_event_yes_threshold": 0.24,
-  "single_source_yes_threshold": 0.14,
+  "single_source_yes_threshold": 0.12,
   "strong_entailment_threshold": 0.66,
   "exact_fact_yes_threshold": 0.42,
   "asr_fact_disagreement_yes_threshold": 0.64,

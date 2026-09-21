@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "global": {
+    "start_shift_s": -0.15,
+    "end_shift_s": -0.15
+  },
+  "by_source": {
+    "medasr": {
+      "start_shift_s": -0.15,
+      "end_shift_s": -0.15
+    },
+    "parakeet_v3": {
+      "start_shift_s": -0.1,
+      "end_shift_s": -0.3
+    }
+  },
+  "samples": 170,
+  "raw_mean_tiou": 0.48687555797448406,
+  "cv_mean_tiou": 0.48972720522527535,
+  "fit_mean_tiou": 0.5049306259872071,
+  "fold_scores": [
+    0.4795472999603868,
+    0.5950235156843711,
+    0.47177546867547177,
+    0.45017100073257293,
+    0.45211874107357375
+  ]
+}

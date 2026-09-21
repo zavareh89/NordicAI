@@ -1,0 +1,18 @@
+{
+  "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+  "max_tasks_per_generation": 10,
+  "max_input_tokens": 8192,
+  "max_new_tokens": 192,
+
+  "min_span_words": 2,
+  "max_span_words": 32,
+  "event_context_words": 0,
+  "max_proposal_hints": 5,
+
+  "require_no_strict_fact_contradiction": true,
+  "require_topic_or_exact_fact": false,
+  "min_topic_coverage": 0.05,
+
+  "padding_before_s": 0.03,
+  "padding_after_s": 0.06
+}
